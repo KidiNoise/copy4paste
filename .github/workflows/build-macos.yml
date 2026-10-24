@@ -1,0 +1,98 @@
+name: build-macos
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    # Intel x86_64. Construimos con destino 10.15 (Catalina).
+    runs-on: macos-15-intel
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Entorno del runner
+        run: |
+          set -euo pipefail
+          sw_vers
+          xcodebuild -version
+          uname -m
+          xcrun --sdk macosx --show-sdk-version
+
+      - name: Tests de historial
+        run: |
+          set -euo pipefail
+          swiftc -swift-version 5 Core/HistoryStore.swift Tests/main.swift -o "$RUNNER_TEMP/history-test"
+          "$RUNNER_TEMP/history-test"
+
+      - name: Compilar app Intel para macOS 10.15+
+        shell: bash
+        run: |
+          set -euo pipefail
+          SDK="$(xcrun --sdk macosx --show-sdk-path)"
+          APP="dist/copy4paste.app"
+          mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
+          cp Info.plist "$APP/Contents/Info.plist"
+          printf 'APPL????' > "$APP/Contents/PkgInfo"
+          xcrun swiftc -swift-version 5 -O \
+            -target x86_64-apple-macosx10.15 \
+            -sdk "$SDK" \
+            -framework AppKit -framework ApplicationServices -framework CoreGraphics \
+            Core/HistoryStore.swift Sources/main.swift \
+            -o "$APP/Contents/MacOS/copy4paste"
+
+      - name: Verificar binario, arquitectura y versión mínima
+        run: |
+          set -euo pipefail
+          APP="dist/copy4paste.app"
+          BIN="$APP/Contents/MacOS/copy4paste"
+          test -x "$BIN"
+          echo "--- file"; file "$BIN"
+          echo "--- minos"; xcrun vtool -show-build "$BIN" | grep -A1 -E 'LC_BUILD_VERSION|LC_VERSION_MIN'
+          MINOS="$(xcrun vtool -show-build "$BIN" | awk '/minos/ {print $2; exit}')"
+          echo "minos=$MINOS"
+          test "$MINOS" = "10.15" || { echo "Versión mínima inesperada: $MINOS"; exit 1; }
+          echo "--- version"; test "$("$BIN" --version)" = "copy4paste 1.0-rc · runtime"
+
+      - name: Prueba de interfaz (cruces, sombreado, borrado)
+        run: |
+          set -euo pipefail
+          ./dist/copy4paste.app/Contents/MacOS/copy4paste --verify-ui
+
+      - name: Firmar ad hoc y empaquetar
+        shell: bash
+        run: |
+          set -euo pipefail
+          APP="dist/copy4paste.app"
+          codesign --force --deep --sign - "$APP"
+          codesign --verify --deep --strict --verbose=2 "$APP"
+          codesign -dv "$APP" 2>&1 || true
+          mkdir -p dist/dmg
+          cp -R "$APP" dist/dmg/
+          ln -s /Applications dist/dmg/Applications
+          hdiutil create -volname copy4paste -srcfolder dist/dmg \
+            -format UDZO -ov dist/copy4paste-macOS-Catalina.dmg
+          ditto -c -k --sequesterRsrc --keepParent "$APP" dist/copy4paste-macOS-Catalina.zip
+          cd dist && shasum -a 256 copy4paste-macOS-Catalina.dmg copy4paste-macOS-Catalina.zip > SHA256SUMS && cat SHA256SUMS
+
+      - name: Comprobar el DMG montado
+        run: |
+          set -euo pipefail
+          hdiutil attach dist/copy4paste-macOS-Catalina.dmg -nobrowse -mountpoint /tmp/c4p-dmg
+          test -x "/tmp/c4p-dmg/copy4paste.app/Contents/MacOS/copy4paste"
+          /usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "/tmp/c4p-dmg/copy4paste.app/Contents/Info.plist"
+          hdiutil detach /tmp/c4p-dmg
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: copy4paste-macOS-Catalina
+          path: |
+            dist/copy4paste-macOS-Catalina.dmg
+            dist/copy4paste-macOS-Catalina.zip
+            dist/SHA256SUMS
+          if-no-files-found: error
