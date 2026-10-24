@@ -481,6 +481,88 @@ private final class Copy4PasteApp: NSObject, NSApplicationDelegate {
         }
     }
     @objc private func closeSettings(_ sender: Any?) { hide() }
+
+    /// Auto-test interno: ejercita el selector real sin depender de permisos de Accesibilidad.
+    /// Se ejecuta con `--selftest` en el runner macOS antes de empaquetar.
+    func runSelfTest() {
+        func check(_ condition: @autoclosure () -> Bool, _ label: String) {
+            if !condition() {
+                fputs("FAIL: \(label)\n", stderr)
+                exit(1)
+            }
+            print("ok · \(label)")
+        }
+        func spin(_ seconds: TimeInterval = 0.25) {
+            RunLoop.current.run(until: Date().addingTimeInterval(seconds))
+        }
+        func pasteEvent() -> CGEvent {
+            let event = CGEvent(keyboardEventSource: nil, virtualKey: 9, keyDown: true)!
+            event.flags = .maskCommand
+            return event
+        }
+        let pasteboard = NSPasteboard.general
+
+        // 1. La preferencia queda acotada a 1...30.
+        Config.setCapacity(99)
+        check(Config.capacity == 30, "preferencia se acota a 30")
+        Config.setCapacity(0)
+        check(Config.capacity == 1, "preferencia se acota a 1")
+        Config.setCapacity(4)
+        check(Config.capacity == 4, "preferencia vuelve a 4")
+
+        // 2. Un solo texto: ⌘V pasa sin tocarse (pegado normal).
+        pasteboard.clearContents()
+        pasteboard.setString("solo uno", forType: .string)
+        clipboard.refresh()
+        check(clipboard.entries.count == 1, "historial con un texto")
+        check(handle(type: .keyDown, event: pasteEvent()) != nil, "con un texto ⌘V no se intercepta")
+        spin(0.1)
+        check(popup == nil, "con un texto no se abre selector")
+
+        // 3. Dos textos: ⌘V se intercepta y abre el selector.
+        pasteboard.clearContents()
+        pasteboard.setString("alfa", forType: .string)
+        clipboard.refresh()
+        pasteboard.clearContents()
+        pasteboard.setString("beta", forType: .string)
+        clipboard.refresh()
+        check(clipboard.entries == ["beta", "alfa"], "orden: última copia primero")
+        check(handle(type: .keyDown, event: pasteEvent()) == nil, "con dos textos ⌘V se intercepta")
+        spin(0.4)
+        check(popup?.isVisible == true, "el selector aparece")
+        check(rows.count == 2, "una fila por copia")
+        check(rows[0].isSelected && !rows[1].isSelected, "la primera fila nace sombreada")
+        for row in rows {
+            check(row.subviews.compactMap { $0 as? DeleteControl }.count == 1, "cada fila tiene su cruz")
+        }
+
+        // 4. Flecha abajo mueve la selección y el sombreado.
+        popup?.onMove?(1)
+        check(selected == 1, "flecha abajo selecciona la segunda")
+        check(rows[1].isSelected && !rows[0].isSelected, "el sombreado sigue a la selección")
+        popup?.onMove?(-1)
+        check(selected == 0, "flecha arriba vuelve a la primera")
+
+        // 5. Borrar una copia que NO es la del portapapeles no pega ni la altera.
+        popup?.onMove?(1)
+        let before = pasteboard.string(forType: .string)
+        popup?.onDelete?()
+        check(pasteboard.string(forType: .string) == before, "borrar no pega ni cambia el portapapeles")
+        check(clipboard.entries == ["beta"], "la copia se borró del historial")
+        check(popup == nil, "con una sola copia el selector se cierra")
+
+        // 6. Elegir una copia la deja en el portapapeles (ruta de pegado).
+        pasteboard.clearContents()
+        pasteboard.setString("gamma", forType: .string)
+        clipboard.refresh()
+        check(clipboard.entries == ["gamma", "beta"], "historial listo para elegir")
+        check(clipboard.select(at: 1), "elegir la segunda copia")
+        check(pasteboard.string(forType: .string) == "beta", "la copia elegida llega al portapapeles")
+
+        hide()
+        check(popup == nil, "cerrar deja la app sin ventana")
+        print("copy4paste SELFTEST OK: interceptación, filas, cruces, sombreado, borrado, pegado, preferencia")
+    }
 }
 
 private func eventTapCallback(_ proxy: CGEventTapProxy, _ type: CGEventType,
@@ -491,6 +573,9 @@ private func eventTapCallback(_ proxy: CGEventTapProxy, _ type: CGEventType,
 
 if CommandLine.arguments.contains("--version") {
     print("copy4paste 1.0-rc · runtime")
+} else if CommandLine.arguments.contains("--selftest") {
+    _ = NSApplication.shared
+    Copy4PasteApp().runSelfTest()
 } else if CommandLine.arguments.contains("--verify-ui") {
     // Smoke test ejecutada EN MAC por GitHub Actions, antes de distribuir la app.
     _ = NSApplication.shared

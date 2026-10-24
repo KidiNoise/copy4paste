@@ -64,6 +64,11 @@ jobs:
           set -euo pipefail
           ./dist/copy4paste.app/Contents/MacOS/copy4paste --verify-ui
 
+      - name: Auto-test del selector (⌘V, filas, cruces, borrado, pegado)
+        run: |
+          set -euo pipefail
+          ./dist/copy4paste.app/Contents/MacOS/copy4paste --selftest
+
       - name: Firmar ad hoc y empaquetar
         shell: bash
         run: |
