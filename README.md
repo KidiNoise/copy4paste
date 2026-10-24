@@ -1,29 +1,63 @@
-# copy4paste — versión candidata 1.0 (código fuente)
+# copy4paste
 
-Aplicación nativa y minimalista de portapapeles para Mac Intel con macOS 10.15 o posterior.
+Portapapeles ligero para Mac Intel (macOS 10.15 Catalina o posterior). Una ventana flotante
+de ~290 px aparece al pulsar **⌘V** cuando hay dos o más textos copiados.
 
-## Funcionamiento
-- `⌘C` conserva los **últimos 4 textos**; ajustable entre 1 y 30.
-- `⌘V`: si hay más de un texto, selector compacto con **última copia arriba**, fila sombreada y cruz independiente por fila.
-- `1–9` elige, ↑/↓ + Intro navega, Retroceso elimina, `Esc` cancela.
+## Qué hace
+
+- `⌘C` guarda los últimos **4 textos** (ajustable de 1 a 30 en Ajustes).
+- `⌘V`: si hay más de un texto, selector compacto; la copia **más reciente siempre es la 1**.
+  - `1`–`9` pega esa copia.
+  - `↑`/`↓` mueve el sombreado, `Intro` pega.
+  - `Retroceso` borra la copia seleccionada **sin pegar**.
+  - `×` a la derecha de cada fila borra esa fila con el ratón.
+  - `Esc` cierra sin pegar.
 - `⌃⌥⌘P` abre Ajustes.
-- Si solo hay una copia o el portapapeles contiene archivos/imágenes, el pegado habitual no se modifica.
-- Sin demo al arrancar, sin icono en Dock y sin almacenamiento del historial en disco.
-- Al iniciarse pide cerrar de forma normal las versiones anteriores del mismo producto para evitar varios interceptores de `⌘V`.
+- Con un solo texto, o si el portapapeles lleva archivos/imágenes, **⌘V se comporta normal**.
+- Sin ventana ni icono en el Dock al arrancar (LSUIElement). Sin demo.
+- El historial vive **solo en RAM**; en disco solo queda el número de copias (UserDefaults).
+- Al arrancar cierra instancias antiguas del producto (mismo bundle ID o ejecutable `copy4paste`).
 
-## Compilación y distribución
-La carpeta `.github/workflows` compila **una aplicación macOS Intel** en un Mac de GitHub Actions y publica `copy4paste-macOS-Catalina.dmg` y `.zip` como *artifacts* del flujo (no como Release). No requiere que el usuario compile Swift en su equipo.
+## Instalar
 
-**Limitación actual:** el binario generado tiene una firma *ad hoc* para pruebas; **no está notarizado por Apple**. Gatekeeper puede mostrar advertencias. Para distribuir al público con experiencia de instalación normal hace falta configurar un certificado Developer ID, Hardened Runtime y notarización de Apple con una cuenta Apple Developer. No recomendamos el artefacto unsigned como instalador final.
+1. Abre `copy4paste-macOS-Catalina.dmg`.
+2. Arrastra **copy4paste** a la carpeta **Aplicaciones**.
+3. La primera vez: clic derecho sobre la app → **Abrir** → **Abrir** otra vez.
+   (Gatekeeper avisa porque el binario tiene firma *ad hoc*, no notarizada por Apple.)
+4. En **Ajustes del Sistema → Privacidad y seguridad → Accesibilidad**, activa **copy4paste**.
+   En algunas versiones de macOS también pide **Supervisión de entrada**.
+5. Copia dos textos distintos y pulsa ⌘V: aparece el selector.
 
-El código de la interfaz AppKit **todavía debe pasar la compilación en GitHub Actions y pruebas funcionales en macOS Catalina** antes de denominarse 1.0 estable.
+Si el atajo no responde tras una actualización, desactiva y vuelve a activar el permiso de
+Accesibilidad: al cambiar la firma, macOS invalida el permiso anterior.
 
-## Seguridad y privacidad
-- Todo el historial permanece en RAM durante la ejecución; las preferencias numéricas sí se guardan en `UserDefaults`.
-- Se ignoran archivos, imágenes y tipos declarados como confidenciales/transitorios.
-- El acceso global al teclado exige permisos de Accesibilidad y puede requerir Supervisión de entrada en versiones de macOS.
-- No se envía información a servidores.
-- Es recomendable cerrar temporalmente la utilidad al manejar contraseñas, porque algunas aplicaciones no señalan correctamente datos sensibles en el portapapeles.
+## Compilación
+
+`./.github/workflows/build-macos.yml` compila en un runner **macOS Intel** y produce el DMG y el
+ZIP. No hace falta compilar nada en el Mac del usuario.
+
+```
+swiftc -swift-version 5 -target x86_64-apple-macosx10.15 \
+  -framework AppKit -framework ApplicationServices -framework CoreGraphics \
+  Core/HistoryStore.swift Sources/main.swift -o copy4paste.app/Contents/MacOS/copy4paste
+```
+
+Pruebas que corren antes de empaquetar:
+
+- `Tests/main.swift` — 18 comprobaciones del historial.
+- `--verify-ui` — cruz presente y clicable, texto que no bloquea el clic, sombreado.
+- `--selftest` — interceptación de ⌘V con 1 y 2 textos, filas, cruces, sombreado con flechas,
+  borrado sin pegar, copia elegida al portapapeles y límites de la preferencia 1–30.
+
+## Límites conocidos
+
+- Firmado *ad hoc*: **no notarizado**. Sin cuenta Apple Developer no hay forma de evitar el aviso
+  de Gatekeeper en la primera apertura.
+- Compilado y probado en un runner **macOS 15.7.9 Intel** con destino 10.15. No se ha ejecutado
+  en un Mac con Catalina real.
+- El pegado dentro de apps concretas (Notas, Safari…) y el retorno de foco no se pueden probar
+  sin una sesión gráfica con permisos de Accesibilidad concedidos.
 
 ## Licencia
+
 MIT — consulta `LICENSE`.

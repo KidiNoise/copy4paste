@@ -222,8 +222,12 @@ private final class Copy4PasteApp: NSObject, NSApplicationDelegate {
             "com.kidinoise.copy4paste",
             "com.kidinoise.copy4paste.cleantrial"
         ]
+        // Las betas lanzadas desde Terminal no siempre tienen bundle ID: también
+        // se cierran las instancias cuyo ejecutable se llama copy4paste.
         for running in NSWorkspace.shared.runningApplications where running.processIdentifier != currentPID {
-            if let bundleID = running.bundleIdentifier, oldBundleIDs.contains(bundleID) {
+            let sameBundle = running.bundleIdentifier.map { oldBundleIDs.contains($0) } ?? false
+            let sameExecutable = running.executableURL?.lastPathComponent == "copy4paste"
+            if sameBundle || sameExecutable {
                 _ = running.terminate()
             }
         }
