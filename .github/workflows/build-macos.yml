@@ -60,9 +60,13 @@ jobs:
           BIN="$APP/Contents/MacOS/copy4paste"
           test -x "$BIN"
           echo "--- file"; file "$BIN"
-          echo "--- build versions"; xcrun vtool -show-build "$BIN" | grep -E 'architecture|platform|minos|sdk'
-          # El corte Intel ha de seguir siendo 10.15 (Catalina).
-          xcrun vtool -show-build -arch x86_64 "$BIN" | grep -q 'minos 10.13'
+          echo "--- build versions"; xcrun vtool -show-build "$BIN"
+          # Con destino < 10.16 el linker emite LC_VERSION_MIN_MACOSX ("version"),
+          # no LC_BUILD_VERSION ("minos"). Se aceptan ambos formatos.
+          xcrun vtool -show-build -arch x86_64 "$BIN" | grep -qE '(minos|version) 10\.13'
+          echo "--- x86_64 minimum: 10.13 confirmado"
+          xcrun vtool -show-build -arch arm64 "$BIN" | grep -qE '(minos|version) 11\.0'
+          echo "--- arm64 minimum: 11.0 confirmado"
           echo "--- version"; test "$("$BIN" --version)" = "copy4paste 1.0-rc · runtime"
 
       - name: Prueba de interfaz (cruces, sombreado, borrado)
