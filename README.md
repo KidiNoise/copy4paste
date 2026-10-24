@@ -1,7 +1,8 @@
 # copy4paste
 
-Portapapeles ligero para Mac Intel (macOS 10.15 Catalina o posterior). Una ventana flotante
-de ~290 px aparece al pulsar **⌘V** cuando hay dos o más textos copiados.
+Portapapeles ligero para Mac. Binario **universal** (Intel x86_64 con mínimo 10.15 Catalina y
+Apple Silicon arm64 con mínimo 11.0). Una ventana flotante de ~290 px aparece al pulsar **⌘V**
+cuando hay dos o más textos copiados.
 
 ## Qué hace
 
@@ -37,10 +38,20 @@ Accesibilidad: al cambiar la firma, macOS invalida el permiso anterior.
 ZIP. No hace falta compilar nada en el Mac del usuario.
 
 ```
+# Intel (Catalina 10.15+)
 swiftc -swift-version 5 -target x86_64-apple-macosx10.15 \
   -framework AppKit -framework ApplicationServices -framework CoreGraphics \
-  Core/HistoryStore.swift Sources/main.swift -o copy4paste.app/Contents/MacOS/copy4paste
+  Core/HistoryStore.swift Sources/main.swift -o build/copy4paste-x86_64
+# Apple Silicon (11.0+)
+swiftc -swift-version 5 -target arm64-apple-macosx11.0 \
+  -framework AppKit -framework ApplicationServices -framework CoreGraphics \
+  Core/HistoryStore.swift Sources/main.swift -o build/copy4paste-arm64
+lipo -create -output copy4paste.app/Contents/MacOS/copy4paste \
+  build/copy4paste-x86_64 build/copy4paste-arm64
 ```
+
+El DMG se crea con `hdiutil -fs HFS+` a propósito: APFS generado por macOS 15 no siempre monta en
+Catalina, HFS+ sí.
 
 Pruebas que corren antes de empaquetar:
 
@@ -52,9 +63,11 @@ Pruebas que corren antes de empaquetar:
 ## Límites conocidos
 
 - Firmado *ad hoc*: **no notarizado**. Sin cuenta Apple Developer no hay forma de evitar el aviso
-  de Gatekeeper en la primera apertura.
-- Compilado y probado en un runner **macOS 15.7.9 Intel** con destino 10.15. No se ha ejecutado
-  en un Mac con Catalina real.
+  de Gatekeeper en la primera apertura. Chrome y macOS lo señalan al descargar y al abrir; el botón
+  derecho → Abrir lo resuelve, pero el aviso no desaparece por código.
+- Compilado y probado en un runner **macOS 15.7.9 Intel**. El corte Intel declara 10.15, pero no se
+  ha ejecutado en un Mac con Catalina real. La rebanada arm64 se compila pero no se ejecuta en el
+  runner (es Intel).
 - El pegado dentro de apps concretas (Notas, Safari…) y el retorno de foco no se pueden probar
   sin una sesión gráfica con permisos de Accesibilidad concedidos.
 
