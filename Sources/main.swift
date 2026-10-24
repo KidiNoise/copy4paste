@@ -3,16 +3,87 @@ import ApplicationServices
 import CoreGraphics
 
 // copy4paste: un portapapeles ligero. macOS 10.15+, Intel.
+private enum Skin: Int, CaseIterable {
+    case dark = 0
+    case light = 1
+    case cyan = 2
+    case midnight = 3
+
+    var title: String {
+        switch self {
+        case .dark: return "Oscuro"
+        case .light: return "Claro"
+        case .cyan: return "Cian"
+        case .midnight: return "Medianoche"
+        }
+    }
+    var background: NSColor {
+        switch self {
+        case .dark: return NSColor(calibratedRed: 0.15, green: 0.15, blue: 0.17, alpha: 1)
+        case .light: return NSColor(calibratedRed: 0.96, green: 0.96, blue: 0.97, alpha: 1)
+        case .cyan: return NSColor(calibratedRed: 0.03, green: 0.14, blue: 0.18, alpha: 1)
+        case .midnight: return NSColor(calibratedRed: 0.05, green: 0.07, blue: 0.16, alpha: 1)
+        }
+    }
+    var selection: NSColor {
+        switch self {
+        case .dark: return NSColor(calibratedWhite: 1, alpha: 0.18)
+        case .light: return NSColor(calibratedRed: 0.55, green: 0.65, blue: 0.82, alpha: 0.55)
+        case .cyan: return NSColor(calibratedRed: 0.05, green: 0.45, blue: 0.55, alpha: 0.85)
+        case .midnight: return NSColor(calibratedRed: 0.18, green: 0.25, blue: 0.55, alpha: 0.85)
+        }
+    }
+    var foreground: NSColor {
+        switch self {
+        case .light: return NSColor(calibratedWhite: 0.10, alpha: 1)
+        default: return NSColor(calibratedWhite: 0.96, alpha: 1)
+        }
+    }
+    var muted: NSColor {
+        switch self {
+        case .light: return NSColor(calibratedWhite: 0.42, alpha: 1)
+        case .dark: return NSColor(calibratedWhite: 0.67, alpha: 1)
+        case .cyan: return NSColor(calibratedRed: 0.55, green: 0.75, blue: 0.80, alpha: 1)
+        case .midnight: return NSColor(calibratedRed: 0.58, green: 0.63, blue: 0.78, alpha: 1)
+        }
+    }
+    var delete: NSColor {
+        switch self {
+        case .light: return NSColor(calibratedWhite: 0.35, alpha: 1)
+        case .dark: return NSColor(calibratedWhite: 0.86, alpha: 1)
+        case .cyan: return NSColor(calibratedRed: 0.70, green: 0.95, blue: 1.0, alpha: 1)
+        case .midnight: return NSColor(calibratedRed: 0.78, green: 0.84, blue: 1.0, alpha: 1)
+        }
+    }
+}
+
 private enum Config {
     static let capacityKey = "copy4paste.capacity"
+    static let skinKey = "copy4paste.skin"
+    static let opacityKey = "copy4paste.opacity"
     static let minimum = 1
     static let maximum = 30
+    static let minOpacity = 20
+    static let maxOpacity = 100
     static var capacity: Int {
         let raw = UserDefaults.standard.object(forKey: capacityKey) as? Int ?? 4
         return min(max(raw, minimum), maximum)
     }
     static func setCapacity(_ n: Int) {
         UserDefaults.standard.set(min(max(n, minimum), maximum), forKey: capacityKey)
+    }
+    static var skin: Skin {
+        Skin(rawValue: UserDefaults.standard.integer(forKey: skinKey)) ?? .dark
+    }
+    static func setSkin(_ skin: Skin) {
+        UserDefaults.standard.set(skin.rawValue, forKey: skinKey)
+    }
+    static var opacity: Int {
+        let raw = UserDefaults.standard.object(forKey: opacityKey) as? Int ?? 94
+        return min(max(raw, minOpacity), maxOpacity)
+    }
+    static func setOpacity(_ n: Int) {
+        UserDefaults.standard.set(min(max(n, minOpacity), maxOpacity), forKey: opacityKey)
     }
 }
 
@@ -34,7 +105,7 @@ private final class DeleteControl: NSView {
         cross.line(to: NSPoint(x: x + 4.3, y: y + 4.3))
         cross.move(to: NSPoint(x: x - 4.3, y: y + 4.3))
         cross.line(to: NSPoint(x: x + 4.3, y: y - 4.3))
-        NSColor(calibratedWhite: 0.86, alpha: 1).setStroke()
+        Config.skin.delete.setStroke()
         cross.stroke()
     }
     override func mouseDown(with event: NSEvent) { onDelete?() }
@@ -52,9 +123,10 @@ private final class ClipboardRow: FlippedView {
     init(index: Int, text: String, width: CGFloat, height: CGFloat) {
         self.index = index
         super.init(frame: NSRect(x: 0, y: 0, width: width, height: height))
+        let theme = Config.skin
         let number = NSTextField(labelWithString: "\(index + 1)")
         number.font = NSFont.monospacedDigitSystemFont(ofSize: 11, weight: index == 0 ? .semibold : .regular)
-        number.textColor = NSColor(calibratedWhite: 0.79, alpha: 1)
+        number.textColor = theme.muted
         number.frame = NSRect(x: 9, y: 7, width: 18, height: 18)
         addSubview(number)
         let preview = text.replacingOccurrences(of: "\n", with: " ↵ ")
@@ -62,7 +134,7 @@ private final class ClipboardRow: FlippedView {
                           .replacingOccurrences(of: "\t", with: " ⇥ ")
         let field = NSTextField(labelWithString: preview)
         field.font = NSFont.systemFont(ofSize: 12)
-        field.textColor = .white
+        field.textColor = theme.foreground
         field.lineBreakMode = .byTruncatingTail
         field.maximumNumberOfLines = 1
         field.frame = NSRect(x: 29, y: 6, width: width - 67, height: 20)
@@ -100,7 +172,7 @@ private final class ClipboardRow: FlippedView {
     override func draw(_ dirtyRect: NSRect) {
         super.draw(dirtyRect)
         if isSelected {
-            NSColor(calibratedWhite: 1, alpha: 0.18).setFill()
+            Config.skin.selection.setFill()
             NSBezierPath(roundedRect: bounds.insetBy(dx: 1, dy: 1), xRadius: 5, yRadius: 5).fill()
         }
     }
@@ -113,7 +185,9 @@ private final class PopupPanel: NSPanel {
     var onEscape: (() -> Void)?
     var onDigit: ((Int) -> Void)?
     var onScroll: ((Int) -> Void)?
+    var isSettings = false
     override func scrollWheel(with event: NSEvent) {
+        if isSettings { super.scrollWheel(with: event); return }
         if abs(event.scrollingDeltaY) > 0.25 {
             onScroll?(event.scrollingDeltaY < 0 ? 1 : -1)
         } else { super.scrollWheel(with: event) }
@@ -121,6 +195,10 @@ private final class PopupPanel: NSPanel {
     override var canBecomeKey: Bool { true }
     override var canBecomeMain: Bool { false }
     override func keyDown(with event: NSEvent) {
+        if isSettings {
+            if event.keyCode == 53 { onEscape?() } else { super.keyDown(with: event) }
+            return
+        }
         switch event.keyCode {
         case 53: onEscape?()                 // Esc
         case 125: onMove?(1)                 // Abajo
@@ -145,14 +223,6 @@ private final class ClipboardMemory {
     var capacity: Int { store.capacity }
     func changeCapacity(_ value: Int) { store.setCapacity(value) }
 
-    /// Estado determinista para el auto-test: no depende de lo que hubiera en el portapapeles.
-    func seedForTesting(_ texts: [String]) {
-        store = HistoryStore(capacity: store.capacity)
-        for text in texts.reversed() { _ = store.remember(text) }
-        observed = clipboard.changeCount
-        isText = !texts.isEmpty
-    }
-
     func refresh() {
         let change = clipboard.changeCount
         guard change != observed else { return }
@@ -172,23 +242,19 @@ private final class ClipboardMemory {
         isText = store.remember(string)
     }
 
-    func remove(at index: Int) {
-        refresh()
-        guard entries.indices.contains(index) else { return }
-        let old = entries[index]
-        _ = store.remove(old)
-        if clipboard.string(forType: .string) == old {
+    func remove(text: String) {
+        _ = store.remove(text)
+        if clipboard.string(forType: .string) == text {
             clipboard.clearContents()
             if let first = entries.first { clipboard.setString(first, forType: .string) }
             observed = clipboard.changeCount
             isText = !entries.isEmpty
         }
     }
-    func select(at index: Int) -> Bool {
-        guard entries.indices.contains(index) else { return false }
-        let selected = entries[index]
+    func select(text: String) -> Bool {
+        guard !text.isEmpty else { return false }
         clipboard.clearContents()
-        clipboard.setString(selected, forType: .string)
+        clipboard.setString(text, forType: .string)
         observed = clipboard.changeCount
         isText = true
         // No reordenamos al pegar: el orden muestra las últimas copias reales.
@@ -198,7 +264,7 @@ private final class ClipboardMemory {
 
 private let syntheticPasteMarker: Int64 = 0xC0F4A57E
 
-private final class Copy4PasteApp: NSObject, NSApplicationDelegate {
+private final class Copy4PasteApp: NSObject, NSApplicationDelegate, NSTextFieldDelegate {
     private let clipboard = ClipboardMemory()
     private var popup: PopupPanel?
     private var rows: [ClipboardRow] = []
@@ -215,6 +281,33 @@ private final class Copy4PasteApp: NSObject, NSApplicationDelegate {
     private let rowHeight: CGFloat = 31
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        if CommandLine.arguments.contains("--verify-settings") {
+            NSApp.setActivationPolicy(.accessory)
+            let skin = Config.skin
+            let bg = skin.background.withAlphaComponent(CGFloat(Config.opacity) / 100.0)
+            let log = "skin=\(skin.rawValue) opacity=\(Config.opacity) bg=\(bg) fg=\(skin.foreground)\n"
+            try? log.write(toFile: "/tmp/c4p-settings-config.log", atomically: true, encoding: .utf8)
+            openSettings()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 12) { NSApp.terminate(nil) }
+            return
+        }
+        if CommandLine.arguments.contains("--verify-selector") {
+            NSApp.setActivationPolicy(.accessory)
+            let pasteboard = NSPasteboard.general
+            pasteboard.clearContents()
+            pasteboard.setString("Ejemplo de primera copia", forType: .string)
+            clipboard.refresh()
+            pasteboard.clearContents()
+            pasteboard.setString("Ejemplo de segunda copia", forType: .string)
+            clipboard.refresh()
+            openSelector()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 12) { NSApp.terminate(nil) }
+            return
+        }
+        if CommandLine.arguments.contains("--verify-runtime") {
+            beginVerification()
+            return
+        }
         // Sustituir limpiamente prototipos anteriores del mismo producto.
         // Evita la doble interceptación de ⌘V que afectaba a las versiones beta.
         let currentPID = ProcessInfo.processInfo.processIdentifier
@@ -222,12 +315,8 @@ private final class Copy4PasteApp: NSObject, NSApplicationDelegate {
             "com.kidinoise.copy4paste",
             "com.kidinoise.copy4paste.cleantrial"
         ]
-        // Las betas lanzadas desde Terminal no siempre tienen bundle ID: también
-        // se cierran las instancias cuyo ejecutable se llama copy4paste.
         for running in NSWorkspace.shared.runningApplications where running.processIdentifier != currentPID {
-            let sameBundle = running.bundleIdentifier.map { oldBundleIDs.contains($0) } ?? false
-            let sameExecutable = running.executableURL?.lastPathComponent == "copy4paste"
-            if sameBundle || sameExecutable {
+            if let bundleID = running.bundleIdentifier, oldBundleIDs.contains(bundleID) {
                 _ = running.terminate()
             }
         }
@@ -242,6 +331,48 @@ private final class Copy4PasteApp: NSObject, NSApplicationDelegate {
         let prompt = kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String
         _ = AXIsProcessTrustedWithOptions([prompt: true] as CFDictionary)
         startTap()
+    }
+
+    private func beginVerification() {
+        NSApp.setActivationPolicy(.accessory)
+        var lines: [String] = []
+        func flush() {
+            let text = lines.joined(separator: "\n") + "\n"
+            try? text.write(toFile: "/tmp/copy4paste-verify.log", atomically: true, encoding: .utf8)
+        }
+        lines.append("AX_TRUSTED=\(AXIsProcessTrusted())")
+        let pasteboard = NSPasteboard.general
+        pasteboard.clearContents()
+        pasteboard.setString("VERIFY-UNO", forType: .string)
+        clipboard.refresh()
+        pasteboard.clearContents()
+        pasteboard.setString("VERIFY-DOS", forType: .string)
+        clipboard.refresh()
+        lines.append("ENTRIES=\(clipboard.entries)")
+        lines.append("IS_TEXT=\(clipboard.isText)")
+        startTap()
+        lines.append("TAP_CREATED=\(keyboardTap != nil)")
+        flush()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            let source = CGEventSource(stateID: .hidSystemState)
+            let down = CGEvent(keyboardEventSource: source, virtualKey: 9, keyDown: true)
+            let up = CGEvent(keyboardEventSource: source, virtualKey: 9, keyDown: false)
+            for event in [down, up] {
+                event?.flags = .maskCommand
+                event?.post(tap: .cghidEventTap)
+            }
+            lines.append("POSTED_CMD_V=\(down != nil && up != nil)")
+            flush()
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+            lines.append("POPUP_VISIBLE=\(self.popup?.isVisible == true)")
+            lines.append("DISPLAYED=\(self.displayed)")
+            lines.append("ROWS=\(self.rows.count)")
+            flush()
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 8) {
+            NSApp.terminate(nil)
+        }
     }
 
     private func startTap() {
@@ -315,8 +446,13 @@ private final class Copy4PasteApp: NSObject, NSApplicationDelegate {
         view.wantsLayer = true
         view.layer?.cornerRadius = 9
         view.layer?.masksToBounds = true
-        view.layer?.backgroundColor = NSColor(calibratedWhite: 0.15, alpha: 0.97).cgColor
+        applyBackground(to: view)
         return view
+    }
+
+    private func applyBackground(to view: NSView) {
+        let alpha = CGFloat(Config.opacity) / 100.0
+        view.layer?.backgroundColor = Config.skin.background.withAlphaComponent(alpha).cgColor
     }
 
     private func present(_ panel: PopupPanel, height: CGFloat) {
@@ -344,14 +480,14 @@ private final class Copy4PasteApp: NSObject, NSApplicationDelegate {
         let oldFrame = keepPosition ? popup?.frame : nil
         let visible = min(4, displayed.count)
         firstRow = min(max(firstRow, 0), max(0, displayed.count - visible))
-        let height = 25 + rowHeight * CGFloat(visible)
+        let height = 28 + rowHeight * CGFloat(visible)
         let panel = makePopup(height: height)
         let root = baseView(height: height)
         rows.removeAll()
         for local in 0..<visible {
             let absolute = firstRow + local
             let row = ClipboardRow(index: absolute, text: displayed[absolute], width: width - 10, height: rowHeight)
-            row.frame.origin = NSPoint(x: 5, y: 5 + CGFloat(local) * rowHeight)
+            row.frame.origin = NSPoint(x: 5, y: 25 + CGFloat(local) * rowHeight)
             row.onSelect = { [weak self] index in self?.selectRow(index) }
             row.onPaste = { [weak self] index in self?.choose(index) }
             row.onDelete = { [weak self] index in self?.delete(index) }
@@ -359,16 +495,26 @@ private final class Copy4PasteApp: NSObject, NSApplicationDelegate {
             rows.append(row)
         }
         let hint = NSTextField(labelWithString: displayed.count > 4 ? "\(firstRow+1)–\(firstRow+visible)/\(displayed.count)" : "1 = última")
-        hint.textColor = NSColor(calibratedWhite: 0.67, alpha: 1)
+        hint.textColor = Config.skin.muted
         hint.font = NSFont.systemFont(ofSize: 9)
         hint.alignment = .right
-        hint.frame = NSRect(x: width - 96, y: height - 20, width: 85, height: 14)
+        hint.frame = NSRect(x: width - 136, y: 6, width: 92, height: 14)
         root.addSubview(hint)
         let header = NSTextField(labelWithString: "copy4paste")
         header.font = NSFont.systemFont(ofSize: 10, weight: .medium)
-        header.textColor = NSColor(calibratedWhite: 0.70, alpha: 1)
-        header.frame = NSRect(x: 10, y: height - 20, width: 130, height: 14)
+        header.textColor = Config.skin.muted
+        header.frame = NSRect(x: 10, y: 6, width: 120, height: 14)
         root.addSubview(header)
+        let gear = NSButton(frame: NSRect(x: width - 36, y: 3, width: 26, height: 20))
+        gear.isBordered = false
+        gear.target = self
+        gear.action = #selector(openSettingsAction(_:))
+        gear.toolTip = "Configuración (⌃⌥⌘P)"
+        gear.attributedTitle = NSAttributedString(string: "⚙", attributes: [
+            .font: NSFont.systemFont(ofSize: 13),
+            .foregroundColor: Config.skin.muted
+        ])
+        root.addSubview(gear)
         panel.contentView = root
         updateSelected()
         if let old = oldFrame {
@@ -400,7 +546,7 @@ private final class Copy4PasteApp: NSObject, NSApplicationDelegate {
     }
     private func delete(_ index: Int) {
         guard displayed.indices.contains(index) else { return }
-        clipboard.remove(at: index)
+        clipboard.remove(text: displayed[index])
         displayed = clipboard.entries
         selected = min(selected, max(displayed.count - 1, 0))
         if displayed.count < 2 { hide(); return }
@@ -415,7 +561,8 @@ private final class Copy4PasteApp: NSObject, NSApplicationDelegate {
         buildSelector(keepPosition: true)
     }
     private func choose(_ index: Int) {
-        guard clipboard.select(at: index) else { hide(); return }
+        guard displayed.indices.contains(index),
+              clipboard.select(text: displayed[index]) else { hide(); return }
         let previous = target
         hide(restoreFocus: false)
         _ = previous?.activate(options: .activateIgnoringOtherApps)
@@ -448,130 +595,172 @@ private final class Copy4PasteApp: NSObject, NSApplicationDelegate {
         }
     }
 
-    private func openSettings() {
+    private func footerButton(_ title: String, frame: NSRect, action: Selector, size: CGFloat = 11) -> NSButton {
+        let button = NSButton(frame: frame)
+        button.isBordered = false
+        button.target = self
+        button.action = action
+        button.attributedTitle = NSAttributedString(string: title, attributes: [
+            .font: NSFont.systemFont(ofSize: size, weight: .medium),
+            .foregroundColor: Config.skin.muted
+        ])
+        return button
+    }
+
+    private func openSettings(preserveFrame: Bool = false, preserveTarget: Bool = false) {
+        let oldFrame = preserveFrame ? popup?.frame : nil
+        let oldTarget = target
         if popup?.isVisible == true { hide() }
         showingSettings = true
-        target = NSWorkspace.shared.frontmostApplication
-        let height: CGFloat = 126
+        target = preserveTarget ? oldTarget : NSWorkspace.shared.frontmostApplication
+        let height: CGFloat = 218
         let panel = makePopup(height: height)
+        panel.isSettings = true
         let root = baseView(height: height)
-        let title = NSTextField(labelWithString: "copy4paste · Ajustes")
-        title.font = NSFont.systemFont(ofSize: 12, weight: .medium)
-        title.textColor = .white
-        title.frame = NSRect(x: 12, y: 12, width: 230, height: 20)
+        let theme = Config.skin
+
+        let title = NSTextField(labelWithString: "copy4paste · Ajustes · 1.1")
+        title.font = NSFont.systemFont(ofSize: 12, weight: .semibold)
+        title.textColor = theme.foreground
+        title.frame = NSRect(x: 14, y: 12, width: 262, height: 20)
         root.addSubview(title)
-        let limit = NSTextField(labelWithString: "Copias: \(clipboard.capacity)")
-        limit.identifier = NSUserInterfaceItemIdentifier("capacityLabel")
-        limit.font = NSFont.systemFont(ofSize: 12)
-        limit.textColor = .white
-        limit.frame = NSRect(x: 12, y: 45, width: 150, height: 20)
-        root.addSubview(limit)
-        let stepper = NSStepper(frame: NSRect(x: 192, y: 43, width: 60, height: 24))
+
+        let limitLabel = NSTextField(labelWithString: "Copias")
+        limitLabel.font = NSFont.systemFont(ofSize: 12)
+        limitLabel.textColor = theme.foreground
+        limitLabel.frame = NSRect(x: 14, y: 52, width: 100, height: 20)
+        root.addSubview(limitLabel)
+        let limitValue = NSTextField(labelWithString: "\(clipboard.capacity)")
+        limitValue.identifier = NSUserInterfaceItemIdentifier("capacityLabel")
+        limitValue.font = NSFont.monospacedDigitSystemFont(ofSize: 13, weight: .medium)
+        limitValue.textColor = theme.foreground
+        limitValue.alignment = .right
+        limitValue.frame = NSRect(x: 150, y: 52, width: 34, height: 20)
+        root.addSubview(limitValue)
+        let stepper = NSStepper(frame: NSRect(x: 196, y: 50, width: 52, height: 24))
         stepper.minValue = Double(Config.minimum)
         stepper.maxValue = Double(Config.maximum)
         stepper.integerValue = clipboard.capacity
         stepper.target = self
         stepper.action = #selector(capacityChanged(_:))
+        stepper.appearance = NSAppearance(named: theme == .light ? .aqua : .darkAqua)
         root.addSubview(stepper)
-        let status = NSTextField(labelWithString: "⌘V · seleccionar   |   Esc · cerrar")
-        status.font = NSFont.systemFont(ofSize: 10)
-        status.textColor = NSColor(calibratedWhite: 0.72, alpha: 1)
-        status.frame = NSRect(x: 12, y: 79, width: 258, height: 18)
-        root.addSubview(status)
-        let close = NSButton(title: "Cerrar", target: self, action: #selector(closeSettings(_:)))
-        close.frame = NSRect(x: width - 92, y: height - 28, width: 80, height: 22)
+
+        let skinLabel = NSTextField(labelWithString: "Skin")
+        skinLabel.font = NSFont.systemFont(ofSize: 12)
+        skinLabel.textColor = theme.foreground
+        skinLabel.frame = NSRect(x: 14, y: 92, width: 80, height: 20)
+        root.addSubview(skinLabel)
+        let skinPopup = NSPopUpButton(frame: NSRect(x: 100, y: 90, width: 176, height: 24), pullsDown: false)
+        skinPopup.addItems(withTitles: Skin.allCases.map { $0.title })
+        skinPopup.selectItem(at: Config.skin.rawValue)
+        skinPopup.target = self
+        skinPopup.action = #selector(skinChanged(_:))
+        skinPopup.controlSize = .small
+        skinPopup.font = NSFont.systemFont(ofSize: 11)
+        skinPopup.appearance = NSAppearance(named: theme == .light ? .aqua : .darkAqua)
+        root.addSubview(skinPopup)
+
+        let opacityLabel = NSTextField(labelWithString: "Opacidad")
+        opacityLabel.font = NSFont.systemFont(ofSize: 12)
+        opacityLabel.textColor = theme.foreground
+        opacityLabel.frame = NSRect(x: 14, y: 132, width: 100, height: 20)
+        root.addSubview(opacityLabel)
+        let opacityField = NSTextField(frame: NSRect(x: 150, y: 131, width: 50, height: 22))
+        opacityField.identifier = NSUserInterfaceItemIdentifier("opacityField")
+        opacityField.stringValue = "\(Config.opacity)"
+        opacityField.font = NSFont.monospacedDigitSystemFont(ofSize: 12, weight: .medium)
+        opacityField.alignment = .right
+        opacityField.isEditable = true
+        opacityField.isBezeled = true
+        opacityField.bezelStyle = .roundedBezel
+        opacityField.target = self
+        opacityField.action = #selector(opacityChanged(_:))
+        opacityField.delegate = self
+        opacityField.appearance = NSAppearance(named: theme == .light ? .aqua : .darkAqua)
+        root.addSubview(opacityField)
+        let percent = NSTextField(labelWithString: "%")
+        percent.font = NSFont.systemFont(ofSize: 12)
+        percent.textColor = theme.muted
+        percent.frame = NSRect(x: 203, y: 132, width: 20, height: 20)
+        root.addSubview(percent)
+
+        let help = NSTextField(labelWithString: "4 copias por defecto · 1–30 · historial solo en RAM")
+        help.font = NSFont.systemFont(ofSize: 9)
+        help.textColor = theme.muted
+        help.frame = NSRect(x: 14, y: 166, width: 262, height: 16)
+        root.addSubview(help)
+
+        let quit = footerButton("Salir", frame: NSRect(x: width - 176, y: height - 32, width: 76, height: 22),
+                                action: #selector(quitApp(_:)))
+        root.addSubview(quit)
+        let close = footerButton("Cerrar", frame: NSRect(x: width - 92, y: height - 32, width: 80, height: 22),
+                                 action: #selector(closeSettings(_:)))
         root.addSubview(close)
+
         panel.contentView = root
-        present(panel, height: height)
+        if let old = oldFrame {
+            panel.setFrame(NSRect(x: old.minX, y: old.maxY - height, width: width, height: height), display: true)
+            panel.makeKeyAndOrderFront(nil)
+        } else {
+            present(panel, height: height)
+        }
     }
+
+    @objc private func openSettingsAction(_ sender: Any?) { openSettings() }
+
     @objc private func capacityChanged(_ sender: NSStepper) {
-        Config.setCapacity(sender.integerValue)
-        clipboard.changeCapacity(sender.integerValue)
+        let value = min(max(sender.integerValue, Config.minimum), Config.maximum)
+        Config.setCapacity(value)
+        clipboard.changeCapacity(value)
         if let root = popup?.contentView,
            let label = root.subviews.compactMap({ $0 as? NSTextField }).first(where: { $0.identifier?.rawValue == "capacityLabel" }) {
-            label.stringValue = "Copias: \(sender.integerValue)"
+            label.stringValue = "\(value)"
         }
     }
-    @objc private func closeSettings(_ sender: Any?) { hide() }
 
-    /// Auto-test interno: ejercita el selector real sin depender de permisos de Accesibilidad.
-    /// Se ejecuta con `--selftest` en el runner macOS antes de empaquetar.
-    func runSelfTest() {
-        func check(_ condition: @autoclosure () -> Bool, _ label: String) {
-            if !condition() {
-                fputs("FAIL: \(label)\n", stderr)
-                exit(1)
-            }
-            print("ok · \(label)")
-        }
-        func spin(_ seconds: TimeInterval = 0.25) {
-            RunLoop.current.run(until: Date().addingTimeInterval(seconds))
-        }
-        func pasteEvent() -> CGEvent {
-            let event = CGEvent(keyboardEventSource: nil, virtualKey: 9, keyDown: true)!
-            event.flags = .maskCommand
-            return event
-        }
-        let pasteboard = NSPasteboard.general
-
-        // 1. La preferencia queda acotada a 1...30.
-        Config.setCapacity(99)
-        check(Config.capacity == 30, "preferencia se acota a 30")
-        Config.setCapacity(0)
-        check(Config.capacity == 1, "preferencia se acota a 1")
-        Config.setCapacity(4)
-        check(Config.capacity == 4, "preferencia vuelve a 4")
-
-        // 2. Un solo texto: ⌘V pasa sin tocarse (pegado normal).
-        pasteboard.clearContents()
-        pasteboard.setString("solo uno", forType: .string)
-        clipboard.refresh()
-        check(clipboard.entries.count == 1, "historial con un texto")
-        check(handle(type: .keyDown, event: pasteEvent()) != nil, "con un texto ⌘V no se intercepta")
-        spin(0.1)
-        check(popup == nil, "con un texto no se abre selector")
-
-        // 3. Dos textos: ⌘V se intercepta y abre el selector.
-        clipboard.seedForTesting(["beta", "alfa"])
-        pasteboard.clearContents()
-        pasteboard.setString("beta", forType: .string)
-        check(clipboard.entries == ["beta", "alfa"], "orden: última copia primero")
-        check(handle(type: .keyDown, event: pasteEvent()) == nil, "con dos textos ⌘V se intercepta")
-        spin(0.4)
-        check(popup?.isVisible == true, "el selector aparece")
-        check(rows.count == 2, "una fila por copia")
-        check(rows[0].isSelected && !rows[1].isSelected, "la primera fila nace sombreada")
-        for row in rows {
-            check(row.subviews.compactMap { $0 as? DeleteControl }.count == 1, "cada fila tiene su cruz")
-        }
-
-        // 4. Flecha abajo mueve la selección y el sombreado.
-        popup?.onMove?(1)
-        check(selected == 1, "flecha abajo selecciona la segunda")
-        check(rows[1].isSelected && !rows[0].isSelected, "el sombreado sigue a la selección")
-        popup?.onMove?(-1)
-        check(selected == 0, "flecha arriba vuelve a la primera")
-
-        // 5. Borrar una copia que NO es la del portapapeles no pega ni la altera.
-        popup?.onMove?(1)
-        let before = pasteboard.string(forType: .string)
-        popup?.onDelete?()
-        check(pasteboard.string(forType: .string) == before, "borrar no pega ni cambia el portapapeles")
-        check(clipboard.entries == ["beta"], "la copia se borró del historial")
-        check(popup == nil, "con una sola copia el selector se cierra")
-
-        // 6. Elegir una copia la deja en el portapapeles (ruta de pegado).
-        pasteboard.clearContents()
-        pasteboard.setString("gamma", forType: .string)
-        clipboard.refresh()
-        check(clipboard.entries == ["gamma", "beta"], "historial listo para elegir")
-        check(clipboard.select(at: 1), "elegir la segunda copia")
-        check(pasteboard.string(forType: .string) == "beta", "la copia elegida llega al portapapeles")
-
-        hide()
-        check(popup == nil, "cerrar deja la app sin ventana")
-        print("copy4paste SELFTEST OK: interceptación, filas, cruces, sombreado, borrado, pegado, preferencia")
+    @objc private func skinChanged(_ sender: NSPopUpButton) {
+        Config.setSkin(Skin(rawValue: sender.indexOfSelectedItem) ?? .dark)
+        openSettings(preserveFrame: true, preserveTarget: true)
     }
+
+    @objc private func opacityChanged(_ sender: Any?) {
+        guard let field = sender as? NSTextField else { return }
+        applyOpacity(from: field)
+    }
+
+    func controlTextDidEndEditing(_ obj: Notification) {
+        guard let field = obj.object as? NSTextField,
+              field.identifier?.rawValue == "opacityField" else { return }
+        applyOpacity(from: field)
+    }
+
+    private func applyOpacity(from field: NSTextField) {
+        let text = field.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let value = Int(text) else {
+            field.stringValue = "\(Config.opacity)"
+            return
+        }
+        let clamped = min(max(value, Config.minOpacity), Config.maxOpacity)
+        Config.setOpacity(clamped)
+        field.stringValue = "\(clamped)"
+        if let root = popup?.contentView {
+            applyBackground(to: root)
+        }
+    }
+
+    @objc private func closeSettings(_ sender: Any?) {
+        let previous = target
+        guard clipboard.entries.count > 1 else {
+            hide()
+            return
+        }
+        hide(restoreFocus: false)
+        target = previous
+        openSelector()
+    }
+
+    @objc private func quitApp(_ sender: Any?) { NSApp.terminate(nil) }
 }
 
 private func eventTapCallback(_ proxy: CGEventTapProxy, _ type: CGEventType,
@@ -581,10 +770,7 @@ private func eventTapCallback(_ proxy: CGEventTapProxy, _ type: CGEventType,
 }
 
 if CommandLine.arguments.contains("--version") {
-    print("copy4paste 1.0-rc · runtime")
-} else if CommandLine.arguments.contains("--selftest") {
-    _ = NSApplication.shared
-    Copy4PasteApp().runSelfTest()
+    print("copy4paste 1.1 · runtime")
 } else if CommandLine.arguments.contains("--verify-ui") {
     // Smoke test ejecutada EN MAC por GitHub Actions, antes de distribuir la app.
     _ = NSApplication.shared

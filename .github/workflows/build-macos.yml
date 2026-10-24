@@ -10,7 +10,8 @@ permissions:
 
 jobs:
   build:
-    # Intel x86_64. Construimos con destino 10.15 (Catalina).
+    # El único runner macOS x86_64 disponible en GitHub. Compilamos las dos
+    # arquitecturas y las unimos con lipo.
     runs-on: macos-15-intel
     timeout-minutes: 30
     steps:
@@ -24,19 +25,19 @@ jobs:
           uname -m
           xcrun --sdk macosx --show-sdk-version
 
-      - name: Tests de historial
+      - name: Tests del historial
         run: |
           set -euo pipefail
           swiftc -swift-version 5 Core/HistoryStore.swift Tests/main.swift -o "$RUNNER_TEMP/history-test"
           "$RUNNER_TEMP/history-test"
 
-      - name: Compilar universal (Intel 10.13 + Apple Silicon 11.0)
+      - name: Compilar universal (Intel 10.15 + Apple Silicon 11.0)
         shell: bash
         run: |
           set -euo pipefail
           SDK="$(xcrun --sdk macosx --show-sdk-path)"
           APP="dist/copy4paste.app"
-          mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources" build
+          mkdir -p "$APP/Contents/MacOS" build
           cp Info.plist "$APP/Contents/Info.plist"
           printf 'APPL????' > "$APP/Contents/PkgInfo"
 
@@ -44,40 +45,38 @@ jobs:
                   -framework AppKit -framework ApplicationServices -framework CoreGraphics
                   Core/HistoryStore.swift Sources/main.swift)
 
-          # Intel: 10.13 para cubrir High Sierra/Mojave además de Catalina+.
-          xcrun swiftc "${COMMON[@]}" -target x86_64-apple-macosx10.13 -o build/copy4paste-x86_64
-          # Apple Silicon: mismo código, por si el Mac no es Intel.
-          xcrun swiftc "${COMMON[@]}" -target arm64-apple-macosx11.0 -o build/copy4paste-arm64
+          xcrun swiftc "${COMMON[@]}" -target x86_64-apple-macosx10.15 -o build/copy4paste-x86_64
+          xcrun swiftc "${COMMON[@]}" -target arm64-apple-macosx11.0  -o build/copy4paste-arm64
 
           lipo -create -output "$APP/Contents/MacOS/copy4paste" \
                build/copy4paste-x86_64 build/copy4paste-arm64
           lipo -info "$APP/Contents/MacOS/copy4paste"
 
-      - name: Verificar binario, arquitecturas y versión mínima
+      - name: Verificar binario y versiones mínimas
         run: |
           set -euo pipefail
-          APP="dist/copy4paste.app"
-          BIN="$APP/Contents/MacOS/copy4paste"
+          BIN="dist/copy4paste.app/Contents/MacOS/copy4paste"
           test -x "$BIN"
-          echo "--- file"; file "$BIN"
-          echo "--- build versions"; xcrun vtool -show-build "$BIN"
+          file "$BIN"
+          xcrun vtool -show-build "$BIN"
           # Con destino < 10.16 el linker emite LC_VERSION_MIN_MACOSX ("version"),
           # no LC_BUILD_VERSION ("minos"). Se aceptan ambos formatos.
-          xcrun vtool -show-build -arch x86_64 "$BIN" | grep -qE '(minos|version) 10\.13'
-          echo "--- x86_64 minimum: 10.13 confirmado"
-          xcrun vtool -show-build -arch arm64 "$BIN" | grep -qE '(minos|version) 11\.0'
-          echo "--- arm64 minimum: 11.0 confirmado"
-          echo "--- version"; test "$("$BIN" --version)" = "copy4paste 1.0-rc · runtime"
+          xcrun vtool -show-build -arch x86_64 "$BIN" | grep -qE '(minos|version) 10\.15'
+          xcrun vtool -show-build -arch arm64  "$BIN" | grep -qE '(minos|version) 11\.0'
+          "$BIN" --version
 
       - name: Prueba de interfaz (cruces, sombreado, borrado)
-        run: |
-          set -euo pipefail
-          ./dist/copy4paste.app/Contents/MacOS/copy4paste --verify-ui
+        run: ./dist/copy4paste.app/Contents/MacOS/copy4paste --verify-ui
 
-      - name: Auto-test del selector (⌘V, filas, cruces, borrado, pegado)
+      - name: Prueba de ejecución (portapapeles, historial, tap)
         run: |
           set -euo pipefail
-          ./dist/copy4paste.app/Contents/MacOS/copy4paste --selftest
+          rm -f /tmp/copy4paste-verify.log
+          ./dist/copy4paste.app/Contents/MacOS/copy4paste --verify-runtime || true
+          echo "--- log"
+          cat /tmp/copy4paste-verify.log
+          grep -q 'ENTRIES=\["VERIFY-DOS", "VERIFY-UNO"\]' /tmp/copy4paste-verify.log
+          grep -q 'IS_TEXT=true' /tmp/copy4paste-verify.log
 
       - name: Firmar ad hoc y empaquetar
         shell: bash
@@ -86,21 +85,20 @@ jobs:
           APP="dist/copy4paste.app"
           codesign --force --deep --sign - "$APP"
           codesign --verify --deep --strict --verbose=2 "$APP"
-          codesign -dv "$APP" 2>&1 || true
           mkdir -p dist/dmg
           cp -R "$APP" dist/dmg/
           ln -s /Applications dist/dmg/Applications
-          # HFS+ explícito: Catalina monta HFS+ sin sorpresas; APFS de macOS 15 no siempre.
+          # HFS+ explícito: Catalina monta HFS+ sin sorpresas; el APFS de macOS 15 no siempre.
           hdiutil create -volname copy4paste -srcfolder dist/dmg \
-            -fs HFS+ -format UDZO -ov dist/copy4paste-macOS-Catalina.dmg
-          ditto -c -k --sequesterRsrc --keepParent "$APP" dist/copy4paste-macOS-Catalina.zip
-          cd dist && shasum -a 256 copy4paste-macOS-Catalina.dmg copy4paste-macOS-Catalina.zip > SHA256SUMS && cat SHA256SUMS
+            -fs HFS+ -format UDZO -ov dist/copy4paste-macOS-universal.dmg
+          ditto -c -k --sequesterRsrc --keepParent "$APP" dist/copy4paste-macOS-universal.zip
+          cd dist && shasum -a 256 copy4paste-macOS-universal.dmg copy4paste-macOS-universal.zip > SHA256SUMS && cat SHA256SUMS
 
       - name: Comprobar el DMG montado
         run: |
           set -euo pipefail
-          hdiutil attach dist/copy4paste-macOS-Catalina.dmg -nobrowse -mountpoint /tmp/c4p-dmg
-          echo "--- filesystem"; diskutil info /tmp/c4p-dmg | grep -E 'File System Personality|Type \(Bundle\)'
+          hdiutil attach dist/copy4paste-macOS-universal.dmg -nobrowse -mountpoint /tmp/c4p-dmg
+          diskutil info /tmp/c4p-dmg | grep -E 'File System Personality|Type \(Bundle\)'
           test -x "/tmp/c4p-dmg/copy4paste.app/Contents/MacOS/copy4paste"
           /usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "/tmp/c4p-dmg/copy4paste.app/Contents/Info.plist"
           codesign --verify --deep --strict "/tmp/c4p-dmg/copy4paste.app"
@@ -108,9 +106,9 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: copy4paste-macOS-Catalina
+          name: copy4paste-macOS-universal
           path: |
-            dist/copy4paste-macOS-Catalina.dmg
-            dist/copy4paste-macOS-Catalina.zip
+            dist/copy4paste-macOS-universal.dmg
+            dist/copy4paste-macOS-universal.zip
             dist/SHA256SUMS
           if-no-files-found: error

@@ -1,0 +1,86 @@
+name: release-macos
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: macos-15-intel
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Tests del historial
+        run: |
+          set -euo pipefail
+          swiftc -swift-version 5 Core/HistoryStore.swift Tests/main.swift -o "$RUNNER_TEMP/history-test"
+          "$RUNNER_TEMP/history-test"
+
+      - name: Compilar universal y empaquetar
+        shell: bash
+        run: |
+          set -euo pipefail
+          SDK="$(xcrun --sdk macosx --show-sdk-path)"
+          APP="dist/copy4paste.app"
+          mkdir -p "$APP/Contents/MacOS" build
+          cp Info.plist "$APP/Contents/Info.plist"
+          printf 'APPL????' > "$APP/Contents/PkgInfo"
+
+          COMMON=(-swift-version 5 -O -sdk "$SDK"
+                  -framework AppKit -framework ApplicationServices -framework CoreGraphics
+                  Core/HistoryStore.swift Sources/main.swift)
+
+          xcrun swiftc "${COMMON[@]}" -target x86_64-apple-macosx10.15 -o build/copy4paste-x86_64
+          xcrun swiftc "${COMMON[@]}" -target arm64-apple-macosx11.0  -o build/copy4paste-arm64
+          lipo -create -output "$APP/Contents/MacOS/copy4paste" \
+               build/copy4paste-x86_64 build/copy4paste-arm64
+
+          BIN="$APP/Contents/MacOS/copy4paste"
+          lipo -info "$BIN"
+          xcrun vtool -show-build -arch x86_64 "$BIN" | grep -qE '(minos|version) 10\.15'
+          xcrun vtool -show-build -arch arm64  "$BIN" | grep -qE '(minos|version) 11\.0'
+          "$BIN" --version
+          "$BIN" --verify-ui
+
+          codesign --force --deep --sign - "$APP"
+          codesign --verify --deep --strict --verbose=2 "$APP"
+
+          mkdir -p dist/dmg
+          cp -R "$APP" dist/dmg/
+          ln -s /Applications dist/dmg/Applications
+          hdiutil create -volname copy4paste -srcfolder dist/dmg \
+            -fs HFS+ -format UDZO -ov dist/copy4paste-macOS-universal.dmg
+          ditto -c -k --sequesterRsrc --keepParent "$APP" dist/copy4paste-macOS-universal.zip
+          cd dist && shasum -a 256 copy4paste-macOS-universal.dmg copy4paste-macOS-universal.zip > SHA256SUMS
+
+      - name: Verificar el DMG montado
+        run: |
+          set -euo pipefail
+          hdiutil attach dist/copy4paste-macOS-universal.dmg -nobrowse -mountpoint /tmp/c4p-dmg
+          diskutil info /tmp/c4p-dmg | grep -E 'File System Personality|Type \(Bundle\)'
+          test -x "/tmp/c4p-dmg/copy4paste.app/Contents/MacOS/copy4paste"
+          hdiutil detach /tmp/c4p-dmg
+
+      - name: Publicar release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          if gh release view "${GITHUB_REF_NAME}" >/dev/null 2>&1; then
+            gh release upload "${GITHUB_REF_NAME}" \
+              dist/copy4paste-macOS-universal.dmg \
+              dist/copy4paste-macOS-universal.zip \
+              dist/SHA256SUMS --clobber
+          else
+            gh release create "${GITHUB_REF_NAME}" \
+              dist/copy4paste-macOS-universal.dmg \
+              dist/copy4paste-macOS-universal.zip \
+              dist/SHA256SUMS \
+              --title "copy4paste ${GITHUB_REF_NAME}" \
+              --notes-file RELEASE_NOTES.md
+          fi
