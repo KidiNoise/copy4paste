@@ -1,104 +1,74 @@
-# copy4paste
+<p align="center">
+  <a href="https://kidinoise.github.io/copy4paste/">
+    <img src="docs/assets/readme-hero.png" alt="copy4paste — Copia. Elige. Pega." width="100%">
+  </a>
+</p>
 
-**Copia. Elige. Pega.** Un portapapeles con historial para macOS: pulsa `⌘V` y elige entre tus
-últimos textos con una tecla, sin abrir ventanas ni soltar el teclado.
+<p align="center">
+  <a href="https://github.com/KidiNoise/copy4paste/releases/latest"><img alt="Versión" src="https://img.shields.io/badge/versi%C3%B3n-1.1-0071e3"></a>
+  <img alt="macOS" src="https://img.shields.io/badge/macOS-10.15%2B%20Intel%20%C2%B7%2011%2B%20Apple%20Silicon-1b1b1d">
+  <img alt="Licencia" src="https://img.shields.io/badge/licencia-MIT-006a26">
+  <img alt="Sin dependencias" src="https://img.shields.io/badge/dependencias-ninguna-717785">
+</p>
 
-[**Descargar para Mac**](https://github.com/KidiNoise/copy4paste/releases/latest/download/copy4paste-macOS-universal.dmg) ·
-[Web del proyecto](https://kidinoise.github.io/copy4paste/) ·
-[Licencia MIT](LICENSE)
+<p align="center">
+  <b><a href="https://github.com/KidiNoise/copy4paste/releases/latest/download/copy4paste-macOS-universal.dmg">Descargar para Mac</a></b>
+  &nbsp;·&nbsp;
+  <a href="https://kidinoise.github.io/copy4paste/">Web del proyecto</a>
+  &nbsp;·&nbsp;
+  <a href="#instalación">Cómo se instala</a>
+</p>
 
-[![copy4paste — Copia. Elige. Pega.](docs/assets/og.png)](https://kidinoise.github.io/copy4paste/)
+---
 
-Utilidad nativa de AppKit, sin Electron ni dependencias externas. Todo el historial vive en RAM.
-
-## Qué hace
-
-- `⌘C` guarda los últimos **4 textos** (ajustable de 1 a 30 en Ajustes).
-- `⌘V`: si hay más de un texto, aparece un selector flotante; la copia **más reciente es siempre la 1**.
-  - `1`–`9` pega esa copia.
-  - `↑`/`↓` mueve el sombreado, `Intro` pega.
-  - `Retroceso` borra la copia seleccionada **sin pegar**.
-  - `×` a la derecha de cada fila borra esa fila con el ratón.
-  - `Esc` cierra sin pegar.
-- `⚙` en el selector (o `⌃⌥⌘P`) abre Ajustes: copias, skin, opacidad y salir.
-- Si solo hay una copia, o el portapapeles contiene archivos o imágenes, `⌘V` se comporta como siempre.
-- Sin icono en el Dock, sin demo al arrancar y sin historial en disco.
-- Las acciones del selector trabajan sobre la instantánea visible: si el portapapeles cambia mientras
-  está abierto, no se borra ni se pega la entrada equivocada.
-
-## Requisitos
-
-- **Intel**: macOS 10.15 Catalina o posterior.
-- **Apple Silicon**: macOS 11 Big Sur o posterior.
-- El DMG es **universal** (x86_64 + arm64).
+Copia varios textos y elige cuál pegar con una tecla. Al pulsar `⌘V` aparece un selector flotante con
+tus últimas copias; pulsas `1`, `2`, `3`… y sigue tu trabajo. Nativo de macOS, sin Electron, sin red y
+sin historial en disco.
 
 ## Instalación
 
-1. Descarga el DMG y ábrelo.
-2. Arrastra `copy4paste.app` a **Aplicaciones**.
-3. Primer arranque: **clic derecho → Abrir** (la app está firmada *ad hoc*, no notarizada).
-4. Ajustes del Sistema → Privacidad y seguridad → **Accesibilidad** → activa `copy4paste`.
-5. Copia dos textos distintos y pulsa `⌘V`.
+1. Abre el **DMG** y arrastra `copy4paste.app` a **Aplicaciones**.
+2. Primer arranque: **clic derecho → Abrir**.
+3. Ajustes del Sistema → Privacidad y seguridad → **Accesibilidad** → activa `copy4paste`.
+4. Copia dos textos distintos y pulsa `⌘V`.
 
-Si macOS insiste en bloquearla, revisa Ajustes del Sistema → Privacidad y seguridad → «Abrir igualmente».
+> **Si macOS dice que no puede abrir la app** (macOS 15 o posterior ya no acepta «clic derecho → Abrir»
+> en todos los casos): Ajustes del Sistema → Privacidad y seguridad → baja hasta el aviso sobre
+> `copy4paste` → **Abrir igualmente**. Solo hace falta la primera vez. Pasa porque el binario va firmado
+> *ad hoc* y no notarizado: no hay cuenta Apple Developer detrás del proyecto. El código es abierto y
+> se puede compilar con las instrucciones de abajo.
 
-> **Por qué avisa Gatekeeper:** no hay cuenta Apple Developer detrás de este proyecto, así que el
-> binario no está notarizado. El aviso es de macOS, no un fallo de la app. El código es libre y
-> compilable: puedes construirla tú mismo con los pasos de abajo.
+## Qué hace
 
-El permiso de Accesibilidad está ligado a la firma *ad hoc*: cada recompilación exige volver a marcarlo
-una vez.
-
-## Compilar desde el código
-
-Requiere Xcode Command Line Tools en macOS.
-
-```bash
-# Tests del historial
-swiftc Core/HistoryStore.swift Tests/main.swift -o /tmp/copy4paste-history-test
-/tmp/copy4paste-history-test
-
-# App universal
-SDK="$(xcrun --sdk macosx --show-sdk-path)"
-mkdir -p dist/copy4paste.app/Contents/MacOS
-cp Info.plist dist/copy4paste.app/Contents/Info.plist
-for ARCH_TARGET in x86_64-apple-macosx10.15 arm64-apple-macosx11.0; do
-  xcrun swiftc -swift-version 5 -O -target "$ARCH_TARGET" -sdk "$SDK" \
-    -framework AppKit -framework ApplicationServices -framework CoreGraphics \
-    Core/HistoryStore.swift Sources/main.swift -o "dist/copy4paste-${ARCH_TARGET%%-*}"
-done
-lipo -create -output dist/copy4paste.app/Contents/MacOS/copy4paste \
-  dist/copy4paste-x86_64 dist/copy4paste-arm64
-codesign --force --deep --sign - dist/copy4paste.app
-```
-
-El flujo de GitHub Actions (`.github/workflows/build-macos.yml`) hace exactamente esto en un runner
-`macos-15-intel`: tests, compilación de las dos arquitecturas, `lipo`, comprobación de versiones mínimas,
-pruebas de interfaz y de ejecución, DMG en HFS+ y verificación del DMG montado.
+- `⌘C` guarda los últimos **4 textos** (ajustable de 1 a 30).
+- `⌘V`: selector con la copia **más reciente arriba**.
+  - `1`–`9` pega esa copia · `↑`/`↓` + `Intro` navega · `Retroceso` borra sin pegar · `Esc` cancela.
+  - `×` a la derecha de cada fila borra esa entrada con el ratón.
+- `⚙` (o `⌃⌥⌘P`) abre Ajustes: copias, **skin** (Oscuro, Claro, Cian, Medianoche), **opacidad** y salir.
+- Si solo hay una copia, o el portapapeles lleva archivos o imágenes, `⌘V` funciona como siempre.
+- Sin icono en el Dock, sin ventana al arrancar, sin historial en disco.
 
 ## Privacidad
 
-- El historial vive en **RAM** durante la ejecución; se pierde al cerrar la app.
-- Solo se guardan en `UserDefaults` las preferencias: número de copias, skin y opacidad.
-- Se ignoran archivos, imágenes y tipos marcados como confidenciales o transitorios.
-- **No hay red, ni telemetría, ni cuentas, ni nube.**
-- Al manejar contraseñas conviene cerrar la utilidad: algunas aplicaciones no marcan bien los datos
-  sensibles en el portapapeles.
+El historial vive **en RAM** y desaparece al cerrar. Solo se guardan las preferencias (copias, skin,
+opacidad). No hay red, ni telemetría, ni cuentas, ni nube. Conviene cerrarla mientras se manejan
+contraseñas: algunas apps no marcan bien los datos sensibles en el portapapeles.
 
-## Estructura
+## Compilar
 
-```
-Sources/main.swift          app AppKit (interfaz, atajo global, selector, ajustes)
-Core/HistoryStore.swift     historial en memoria
-Tests/main.swift            18 comprobaciones del historial
-Info.plist                  bundle com.kidinoise.copy4paste
-docs/                       web del proyecto (GitHub Pages)
+Requiere Xcode Command Line Tools.
+
+```bash
+swiftc -swift-version 5 Core/HistoryStore.swift Tests/main.swift -o /tmp/copy4paste-history-test
+/tmp/copy4paste-history-test
 ```
 
-## Estado
+La app y el DMG los construye GitHub Actions en un runner macOS
+(`.github/workflows/build-macos.yml`): tests, binario **universal** (Intel 10.15 + Apple Silicon 11.0),
+prueba de interfaz, prueba de ejecución, firma, DMG en HFS+ y comprobación del DMG montado. Al empujar
+una etiqueta `v*`, `release-macos.yml` publica la Release con el DMG, el ZIP y `SHA256SUMS`.
 
-Versión **1.1**. Probada en macOS Catalina 10.15.7 (Intel) y compilada en CI para Intel + Apple Silicon.
-Sin notarizar. Issues y propuestas: [GitHub Issues](https://github.com/KidiNoise/copy4paste/issues).
+Notas de la web en [`docs/README.md`](docs/README.md).
 
 ## Licencia
 

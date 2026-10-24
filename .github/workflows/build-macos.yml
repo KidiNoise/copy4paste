@@ -37,8 +37,9 @@ jobs:
           set -euo pipefail
           SDK="$(xcrun --sdk macosx --show-sdk-path)"
           APP="dist/copy4paste.app"
-          mkdir -p "$APP/Contents/MacOS" build
+          mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources" build
           cp Info.plist "$APP/Contents/Info.plist"
+          cp Resources/icon.icns "$APP/Contents/Resources/icon.icns"
           printf 'APPL????' > "$APP/Contents/PkgInfo"
 
           COMMON=(-swift-version 5 -O -sdk "$SDK"
@@ -65,6 +66,13 @@ jobs:
           xcrun vtool -show-build -arch arm64  "$BIN" | grep -qE '(minos|version) 11\.0'
           "$BIN" --version
 
+      - name: Comprobar el icono
+        run: |
+          set -euo pipefail
+          test -f dist/copy4paste.app/Contents/Resources/icon.icns
+          file dist/copy4paste.app/Contents/Resources/icon.icns
+          /usr/libexec/PlistBuddy -c 'Print :CFBundleIconFile' dist/copy4paste.app/Contents/Info.plist
+
       - name: Prueba de interfaz (cruces, sombreado, borrado)
         run: ./dist/copy4paste.app/Contents/MacOS/copy4paste --verify-ui
 
@@ -78,20 +86,89 @@ jobs:
           grep -q 'ENTRIES=\["VERIFY-DOS", "VERIFY-UNO"\]' /tmp/copy4paste-verify.log
           grep -q 'IS_TEXT=true' /tmp/copy4paste-verify.log
 
-      - name: Firmar ad hoc y empaquetar
+      - name: Importar certificado Developer ID (si está configurado)
+        id: signing
+        env:
+          CERT_P12: ${{ secrets.MACOS_CERT_P12 }}
+          CERT_PASSWORD: ${{ secrets.MACOS_CERT_PASSWORD }}
+        run: |
+          set -euo pipefail
+          if [ -z "${CERT_P12:-}" ]; then
+            echo "Sin certificado: se firma ad hoc."
+            echo "identity=-" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "$CERT_P12" | base64 --decode > "$RUNNER_TEMP/cert.p12"
+          KEYCHAIN="$RUNNER_TEMP/app-signing.keychain-db"
+          security create-keychain -p actions "$KEYCHAIN"
+          security set-keychain-settings -lut 1800 "$KEYCHAIN"
+          security unlock-keychain -p actions "$KEYCHAIN"
+          security import "$RUNNER_TEMP/cert.p12" -k "$KEYCHAIN" -P "$CERT_PASSWORD" \
+            -T /usr/bin/codesign -T /usr/bin/security
+          security set-key-partition-list -S apple-tool:,apple: -s -k actions "$KEYCHAIN" >/dev/null
+          security list-keychains -d user -s "$KEYCHAIN" $(security list-keychains -d user | tr -d '"')
+          IDENTITY="$(security find-identity -v -p codesigning "$KEYCHAIN" | sed -n 's/.*"\(.*\)"/\1/p' | head -1)"
+          echo "Identidad: $IDENTITY"
+          test -n "$IDENTITY"
+          echo "identity=$IDENTITY" >> "$GITHUB_OUTPUT"
+
+      - name: Firmar y empaquetar
         shell: bash
+        env:
+          IDENTITY: ${{ steps.signing.outputs.identity }}
         run: |
           set -euo pipefail
           APP="dist/copy4paste.app"
-          codesign --force --deep --sign - "$APP"
+          if [ "$IDENTITY" = "-" ]; then
+            codesign --force --deep --sign - "$APP"
+          else
+            # Hardened Runtime + timestamp: obligatorios para notarizar.
+            codesign --force --deep --options runtime --timestamp \
+              --sign "$IDENTITY" "$APP"
+          fi
           codesign --verify --deep --strict --verbose=2 "$APP"
+          codesign -dv "$APP" 2>&1 | sed -n '1,12p' || true
+
           mkdir -p dist/dmg
           cp -R "$APP" dist/dmg/
           ln -s /Applications dist/dmg/Applications
           # HFS+ explícito: Catalina monta HFS+ sin sorpresas; el APFS de macOS 15 no siempre.
           hdiutil create -volname copy4paste -srcfolder dist/dmg \
             -fs HFS+ -format UDZO -ov dist/copy4paste-macOS-universal.dmg
+          if [ "$IDENTITY" != "-" ]; then
+            codesign --force --timestamp --sign "$IDENTITY" dist/copy4paste-macOS-universal.dmg
+          fi
           ditto -c -k --sequesterRsrc --keepParent "$APP" dist/copy4paste-macOS-universal.zip
+
+      - name: Notarizar (si hay credenciales de Apple)
+        if: steps.signing.outputs.identity != '-'
+        shell: bash
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          set -euo pipefail
+          if [ -z "${APPLE_ID:-}" ] || [ -z "${APPLE_PASSWORD:-}" ] || [ -z "${APPLE_TEAM_ID:-}" ]; then
+            echo "::warning::Firmado con Developer ID pero sin credenciales de Apple: no se notariza."
+            exit 0
+          fi
+          xcrun notarytool submit dist/copy4paste-macOS-universal.zip \
+            --apple-id "$APPLE_ID" --team-id "$APPLE_TEAM_ID" --password "$APPLE_PASSWORD" --wait
+          xcrun stapler staple dist/copy4paste.app
+          xcrun stapler validate dist/copy4paste.app
+          rm -f dist/copy4paste-macOS-universal.zip
+          ditto -c -k --sequesterRsrc --keepParent dist/copy4paste.app dist/copy4paste-macOS-universal.zip
+
+          xcrun notarytool submit dist/copy4paste-macOS-universal.dmg \
+            --apple-id "$APPLE_ID" --team-id "$APPLE_TEAM_ID" --password "$APPLE_PASSWORD" --wait
+          xcrun stapler staple dist/copy4paste-macOS-universal.dmg
+          xcrun stapler validate dist/copy4paste-macOS-universal.dmg
+          spctl --assess --type open --context context:primary-signature -v dist/copy4paste-macOS-universal.dmg
+
+      - name: Hashes
+        run: |
+          set -euo pipefail
           cd dist && shasum -a 256 copy4paste-macOS-universal.dmg copy4paste-macOS-universal.zip > SHA256SUMS && cat SHA256SUMS
 
       - name: Comprobar el DMG montado
@@ -100,6 +177,7 @@ jobs:
           hdiutil attach dist/copy4paste-macOS-universal.dmg -nobrowse -mountpoint /tmp/c4p-dmg
           diskutil info /tmp/c4p-dmg | grep -E 'File System Personality|Type \(Bundle\)'
           test -x "/tmp/c4p-dmg/copy4paste.app/Contents/MacOS/copy4paste"
+          test -f "/tmp/c4p-dmg/copy4paste.app/Contents/Resources/icon.icns"
           /usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "/tmp/c4p-dmg/copy4paste.app/Contents/Info.plist"
           codesign --verify --deep --strict "/tmp/c4p-dmg/copy4paste.app"
           hdiutil detach /tmp/c4p-dmg

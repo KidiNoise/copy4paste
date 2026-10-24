@@ -4,6 +4,7 @@
     <key>CFBundleDevelopmentRegion</key><string>es</string>
     <key>CFBundleExecutable</key><string>copy4paste</string>
     <key>CFBundleIdentifier</key><string>com.kidinoise.copy4paste</string>
+    <key>CFBundleIconFile</key><string>icon</string>
     <key>CFBundleInfoDictionaryVersion</key><string>6.0</string>
     <key>CFBundleName</key><string>copy4paste</string>
     <key>CFBundleDisplayName</key><string>copy4paste</string>
