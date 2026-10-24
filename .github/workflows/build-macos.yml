@@ -28,7 +28,7 @@ jobs:
       - name: Tests del historial
         run: |
           set -euo pipefail
-          swiftc -swift-version 5 Core/HistoryStore.swift Tests/main.swift -o "$RUNNER_TEMP/history-test"
+          swiftc -swift-version 5 macos/Core/HistoryStore.swift macos/Tests/main.swift -o "$RUNNER_TEMP/history-test"
           "$RUNNER_TEMP/history-test"
 
       - name: Compilar universal (Intel 10.15 + Apple Silicon 11.0)
@@ -38,13 +38,13 @@ jobs:
           SDK="$(xcrun --sdk macosx --show-sdk-path)"
           APP="dist/copy4paste.app"
           mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources" build
-          cp Info.plist "$APP/Contents/Info.plist"
-          cp Resources/icon.icns "$APP/Contents/Resources/icon.icns"
+          cp macos/Info.plist "$APP/Contents/Info.plist"
+          cp macos/Resources/icon.icns "$APP/Contents/Resources/icon.icns"
           printf 'APPL????' > "$APP/Contents/PkgInfo"
 
           COMMON=(-swift-version 5 -O -sdk "$SDK"
                   -framework AppKit -framework ApplicationServices -framework CoreGraphics
-                  Core/HistoryStore.swift Sources/main.swift)
+                  macos/Core/HistoryStore.swift macos/Sources/main.swift)
 
           xcrun swiftc "${COMMON[@]}" -target x86_64-apple-macosx10.15 -o build/copy4paste-x86_64
           xcrun swiftc "${COMMON[@]}" -target arm64-apple-macosx11.0  -o build/copy4paste-arm64
