@@ -30,7 +30,7 @@ jobs:
           swiftc -swift-version 5 Core/HistoryStore.swift Tests/main.swift -o "$RUNNER_TEMP/history-test"
           "$RUNNER_TEMP/history-test"
 
-      - name: Compilar universal (Intel 10.15 + Apple Silicon 11.0)
+      - name: Compilar universal (Intel 10.13 + Apple Silicon 11.0)
         shell: bash
         run: |
           set -euo pipefail
@@ -44,8 +44,8 @@ jobs:
                   -framework AppKit -framework ApplicationServices -framework CoreGraphics
                   Core/HistoryStore.swift Sources/main.swift)
 
-          # Intel: objetivo real del encargo (Catalina 10.15+).
-          xcrun swiftc "${COMMON[@]}" -target x86_64-apple-macosx10.15 -o build/copy4paste-x86_64
+          # Intel: 10.13 para cubrir High Sierra/Mojave además de Catalina+.
+          xcrun swiftc "${COMMON[@]}" -target x86_64-apple-macosx10.13 -o build/copy4paste-x86_64
           # Apple Silicon: mismo código, por si el Mac no es Intel.
           xcrun swiftc "${COMMON[@]}" -target arm64-apple-macosx11.0 -o build/copy4paste-arm64
 
@@ -62,7 +62,7 @@ jobs:
           echo "--- file"; file "$BIN"
           echo "--- build versions"; xcrun vtool -show-build "$BIN" | grep -E 'architecture|platform|minos|sdk'
           # El corte Intel ha de seguir siendo 10.15 (Catalina).
-          xcrun vtool -show-build -arch x86_64 "$BIN" | grep -q 'minos 10.15'
+          xcrun vtool -show-build -arch x86_64 "$BIN" | grep -q 'minos 10.13'
           echo "--- version"; test "$("$BIN" --version)" = "copy4paste 1.0-rc · runtime"
 
       - name: Prueba de interfaz (cruces, sombreado, borrado)
