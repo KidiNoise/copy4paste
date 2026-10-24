@@ -145,6 +145,14 @@ private final class ClipboardMemory {
     var capacity: Int { store.capacity }
     func changeCapacity(_ value: Int) { store.setCapacity(value) }
 
+    /// Estado determinista para el auto-test: no depende de lo que hubiera en el portapapeles.
+    func seedForTesting(_ texts: [String]) {
+        store = HistoryStore(capacity: store.capacity)
+        for text in texts.reversed() { _ = store.remember(text) }
+        observed = clipboard.changeCount
+        isText = !texts.isEmpty
+    }
+
     func refresh() {
         let change = clipboard.changeCount
         guard change != observed else { return }
@@ -520,12 +528,9 @@ private final class Copy4PasteApp: NSObject, NSApplicationDelegate {
         check(popup == nil, "con un texto no se abre selector")
 
         // 3. Dos textos: ⌘V se intercepta y abre el selector.
-        pasteboard.clearContents()
-        pasteboard.setString("alfa", forType: .string)
-        clipboard.refresh()
+        clipboard.seedForTesting(["beta", "alfa"])
         pasteboard.clearContents()
         pasteboard.setString("beta", forType: .string)
-        clipboard.refresh()
         check(clipboard.entries == ["beta", "alfa"], "orden: última copia primero")
         check(handle(type: .keyDown, event: pasteEvent()) == nil, "con dos textos ⌘V se intercepta")
         spin(0.4)
