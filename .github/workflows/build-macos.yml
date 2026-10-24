@@ -30,33 +30,39 @@ jobs:
           swiftc -swift-version 5 Core/HistoryStore.swift Tests/main.swift -o "$RUNNER_TEMP/history-test"
           "$RUNNER_TEMP/history-test"
 
-      - name: Compilar app Intel para macOS 10.15+
+      - name: Compilar universal (Intel 10.15 + Apple Silicon 11.0)
         shell: bash
         run: |
           set -euo pipefail
           SDK="$(xcrun --sdk macosx --show-sdk-path)"
           APP="dist/copy4paste.app"
-          mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
+          mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources" build
           cp Info.plist "$APP/Contents/Info.plist"
           printf 'APPL????' > "$APP/Contents/PkgInfo"
-          xcrun swiftc -swift-version 5 -O \
-            -target x86_64-apple-macosx10.15 \
-            -sdk "$SDK" \
-            -framework AppKit -framework ApplicationServices -framework CoreGraphics \
-            Core/HistoryStore.swift Sources/main.swift \
-            -o "$APP/Contents/MacOS/copy4paste"
 
-      - name: Verificar binario, arquitectura y versión mínima
+          COMMON=(-swift-version 5 -O -sdk "$SDK"
+                  -framework AppKit -framework ApplicationServices -framework CoreGraphics
+                  Core/HistoryStore.swift Sources/main.swift)
+
+          # Intel: objetivo real del encargo (Catalina 10.15+).
+          xcrun swiftc "${COMMON[@]}" -target x86_64-apple-macosx10.15 -o build/copy4paste-x86_64
+          # Apple Silicon: mismo código, por si el Mac no es Intel.
+          xcrun swiftc "${COMMON[@]}" -target arm64-apple-macosx11.0 -o build/copy4paste-arm64
+
+          lipo -create -output "$APP/Contents/MacOS/copy4paste" \
+               build/copy4paste-x86_64 build/copy4paste-arm64
+          lipo -info "$APP/Contents/MacOS/copy4paste"
+
+      - name: Verificar binario, arquitecturas y versión mínima
         run: |
           set -euo pipefail
           APP="dist/copy4paste.app"
           BIN="$APP/Contents/MacOS/copy4paste"
           test -x "$BIN"
           echo "--- file"; file "$BIN"
-          echo "--- minos"; xcrun vtool -show-build "$BIN" | grep -A1 -E 'LC_BUILD_VERSION|LC_VERSION_MIN'
-          MINOS="$(xcrun vtool -show-build "$BIN" | awk '/minos/ {print $2; exit}')"
-          echo "minos=$MINOS"
-          test "$MINOS" = "10.15" || { echo "Versión mínima inesperada: $MINOS"; exit 1; }
+          echo "--- build versions"; xcrun vtool -show-build "$BIN" | grep -E 'architecture|platform|minos|sdk'
+          # El corte Intel ha de seguir siendo 10.15 (Catalina).
+          xcrun vtool -show-build -arch x86_64 "$BIN" | grep -q 'minos 10.15'
           echo "--- version"; test "$("$BIN" --version)" = "copy4paste 1.0-rc · runtime"
 
       - name: Prueba de interfaz (cruces, sombreado, borrado)
@@ -80,8 +86,9 @@ jobs:
           mkdir -p dist/dmg
           cp -R "$APP" dist/dmg/
           ln -s /Applications dist/dmg/Applications
+          # HFS+ explícito: Catalina monta HFS+ sin sorpresas; APFS de macOS 15 no siempre.
           hdiutil create -volname copy4paste -srcfolder dist/dmg \
-            -format UDZO -ov dist/copy4paste-macOS-Catalina.dmg
+            -fs HFS+ -format UDZO -ov dist/copy4paste-macOS-Catalina.dmg
           ditto -c -k --sequesterRsrc --keepParent "$APP" dist/copy4paste-macOS-Catalina.zip
           cd dist && shasum -a 256 copy4paste-macOS-Catalina.dmg copy4paste-macOS-Catalina.zip > SHA256SUMS && cat SHA256SUMS
 
@@ -89,8 +96,10 @@ jobs:
         run: |
           set -euo pipefail
           hdiutil attach dist/copy4paste-macOS-Catalina.dmg -nobrowse -mountpoint /tmp/c4p-dmg
+          echo "--- filesystem"; diskutil info /tmp/c4p-dmg | grep -E 'File System Personality|Type \(Bundle\)'
           test -x "/tmp/c4p-dmg/copy4paste.app/Contents/MacOS/copy4paste"
           /usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "/tmp/c4p-dmg/copy4paste.app/Contents/Info.plist"
+          codesign --verify --deep --strict "/tmp/c4p-dmg/copy4paste.app"
           hdiutil detach /tmp/c4p-dmg
 
       - uses: actions/upload-artifact@v4
