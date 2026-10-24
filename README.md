@@ -9,6 +9,7 @@
   <img alt="macOS" src="https://img.shields.io/badge/macOS-10.15%2B%20Intel%20%C2%B7%2011%2B%20Apple%20Silicon-1b1b1d">
   <img alt="Licencia" src="https://img.shields.io/badge/licencia-MIT-006a26">
   <img alt="Sin dependencias" src="https://img.shields.io/badge/dependencias-ninguna-717785">
+  <a href="https://github.com/KidiNoise/copy4paste/actions/workflows/build-macos.yml"><img alt="Compilación" src="https://github.com/KidiNoise/copy4paste/actions/workflows/build-macos.yml/badge.svg"></a>
 </p>
 
 <p align="center">
