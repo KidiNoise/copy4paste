@@ -1,30 +1,30 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>copy4paste — el portapapeles con historial para Mac</title>
-<meta name="description" content="Copia varios textos y elige cuál pegar con una tecla. Utilidad nativa de macOS, historial en RAM, sin nube ni telemetría. Gratis y con código abierto.">
+<title>copy4paste — the clipboard with history for Mac</title>
+<meta name="description" content="Copy several texts and pick which one to paste with a single key. Native macOS utility, history in RAM, no cloud, no telemetry. Free and open source.">
 <link rel="canonical" href="https://kidinoise.github.io/copy4paste/">
 <meta name="theme-color" content="#fcf8fb">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="copy4paste">
-<meta property="og:title" content="copy4paste — Copia. Elige. Pega.">
-<meta property="og:description" content="Tus últimos textos copiados, siempre a un ⌘V de distancia. Utilidad nativa para Mac, gratis y de código abierto.">
+<meta property="og:title" content="copy4paste — Copy. Choose. Paste.">
+<meta property="og:description" content="Your latest copied texts, always one ⌘V away. A native Mac utility, free and open source.">
 <meta property="og:url" content="https://kidinoise.github.io/copy4paste/">
 <meta property="og:image" content="https://kidinoise.github.io/copy4paste/assets/og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:locale" content="es_ES">
+<meta property="og:locale" content="en_US">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="copy4paste — Copia. Elige. Pega.">
-<meta name="twitter:description" content="Tus últimos textos copiados, siempre a un ⌘V de distancia. Nativo, gratis y de código abierto.">
+<meta name="twitter:title" content="copy4paste — Copy. Choose. Paste.">
+<meta name="twitter:description" content="Your latest copied texts, always one ⌘V away. Native, free and open source.">
 <meta name="twitter:image" content="https://kidinoise.github.io/copy4paste/assets/og.png">
 <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
 <link rel="stylesheet" href="assets/style.css">
 </head>
-<body class="bg-surface font-body-md text-on-surface antialiased selection:bg-primary-fixed selection:text-on-primary-fixed"><header class="fixed top-0 left-0 right-0 z-50 bg-surface/80 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="h-16 max-w-[1160px] mx-auto px-gutter-mobile lg:px-gutter flex items-center justify-between"><a class="flex items-center gap-space-sm group focus:outline-none" href="#inicio" aria-label="copy4paste, inicio"><span class="w-8 h-8 rounded-lg bg-primary-container flex items-center justify-center shadow-[0_1px_3px_rgba(0,113,227,0.25)] transition-transform group-hover:scale-105"><span class="material-symbols-outlined text-white text-[18px]" aria-hidden="true">&#xE14F;</span></span><span class="font-headline-sm text-headline-sm text-on-surface tracking-tight">copy4paste</span></a><nav class="hidden md:flex items-center gap-space-lg" aria-label="Principal"><a class="font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors" href="#como-funciona">Cómo funciona</a><a class="font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors" href="#caracteristicas">Características</a><a class="font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors" href="#instalacion">Instalación</a><a class="font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors" href="https://github.com/KidiNoise/copy4paste" rel="noopener">GitHub</a></nav><div class="flex items-center gap-space-sm"><a class="hidden sm:inline-flex items-center justify-center px-space-md py-1.5 rounded-full bg-primary-container text-on-primary-container font-label-md text-label-md shadow-[0_1px_3px_rgba(0,0,0,0.12)] hover:opacity-95 active:scale-98 transition-all" href="#descarga">Descargar</a><a class="hidden md:inline-flex w-8 h-8 rounded-full bg-surface-container-high items-center justify-center text-on-surface-variant hover:text-on-surface transition-colors" href="https://github.com/KidiNoise/copy4paste" rel="noopener" aria-label="Repositorio en GitHub"><svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg></a><button type="button" id="menu-btn" class="md:hidden w-9 h-9 rounded-full bg-surface-container-high flex items-center justify-center text-on-surface" aria-label="Abrir menú" aria-expanded="false" aria-controls="menu-movil"><span class="material-symbols-outlined text-[20px]" id="menu-icon" aria-hidden="true">&#xE5D2;</span></button></div></div><div id="menu-movil" class="md:hidden hidden border-t border-outline-variant/40 bg-surface"><nav class="px-gutter-mobile py-space-sm flex flex-col" aria-label="Menú móvil"><a class="py-3 font-label-md text-label-md text-on-surface" href="#como-funciona">Cómo funciona</a><a class="py-3 font-label-md text-label-md text-on-surface" href="#caracteristicas">Características</a><a class="py-3 font-label-md text-label-md text-on-surface" href="#instalacion">Instalación</a><a class="py-3 font-label-md text-label-md text-on-surface" href="https://github.com/KidiNoise/copy4paste" rel="noopener">GitHub</a></nav></div></header><main class="w-full pt-16 bg-surface min-h-[calc(100vh-16rem)]"><div class="flex flex-col w-full">
+<body class="bg-surface font-body-md text-on-surface antialiased selection:bg-primary-fixed selection:text-on-primary-fixed"><header class="fixed top-0 left-0 right-0 z-50 bg-surface/80 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="h-16 max-w-[1160px] mx-auto px-gutter-mobile lg:px-gutter flex items-center justify-between"><a class="flex items-center gap-space-sm group focus:outline-none" href="#inicio" aria-label="copy4paste, home"><span class="w-8 h-8 rounded-lg bg-primary-container flex items-center justify-center shadow-[0_1px_3px_rgba(0,113,227,0.25)] transition-transform group-hover:scale-105"><span class="material-symbols-outlined text-white text-[18px]" aria-hidden="true">&#xE14F;</span></span><span class="font-headline-sm text-headline-sm text-on-surface tracking-tight">copy4paste</span></a><nav class="hidden md:flex items-center gap-space-lg" aria-label="Main"><a class="font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors" href="#como-funciona">How it works</a><a class="font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors" href="#caracteristicas">Features</a><a class="font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors" href="#instalacion">Installation</a><a class="font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors" href="https://github.com/KidiNoise/copy4paste" rel="noopener">GitHub</a></nav><div class="flex items-center gap-space-sm"><a class="hidden sm:inline-flex items-center justify-center px-space-md py-1.5 rounded-full bg-primary-container text-on-primary-container font-label-md text-label-md shadow-[0_1px_3px_rgba(0,0,0,0.12)] hover:opacity-95 active:scale-98 transition-all" href="#descarga">Download</a><a class="hidden md:inline-flex w-8 h-8 rounded-full bg-surface-container-high items-center justify-center text-on-surface-variant hover:text-on-surface transition-colors" href="https://github.com/KidiNoise/copy4paste" rel="noopener" aria-label="GitHub repository"><svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg></a><button type="button" id="menu-btn" class="md:hidden w-9 h-9 rounded-full bg-surface-container-high flex items-center justify-center text-on-surface" aria-label="Open menu" aria-expanded="false" aria-controls="menu-movil"><span class="material-symbols-outlined text-[20px]" id="menu-icon" aria-hidden="true">&#xE5D2;</span></button></div></div><div id="menu-movil" class="md:hidden hidden border-t border-outline-variant/40 bg-surface"><nav class="px-gutter-mobile py-space-sm flex flex-col" aria-label="Mobile menu"><a class="py-3 font-label-md text-label-md text-on-surface" href="#como-funciona">How it works</a><a class="py-3 font-label-md text-label-md text-on-surface" href="#caracteristicas">Features</a><a class="py-3 font-label-md text-label-md text-on-surface" href="#instalacion">Installation</a><a class="py-3 font-label-md text-label-md text-on-surface" href="https://github.com/KidiNoise/copy4paste" rel="noopener">GitHub</a></nav></div></header><main class="w-full pt-16 bg-surface min-h-[calc(100vh-16rem)]"><div class="flex flex-col w-full">
 <!-- SECCIÓN HERO -->
 <section id="inicio" class="relative w-full pt-12 pb-24 md:pt-16 md:pb-32 overflow-hidden flex flex-col items-center text-center">
 <!-- Ambient back-glow subtle macOS aura -->
@@ -39,26 +39,26 @@
 </div>
 <!-- Main Headline & Subtitle -->
 <h1 class="font-display-hero-mobile md:font-display-hero text-display-hero-mobile md:text-display-hero text-on-surface tracking-tight max-w-[820px] mx-auto mb-4 font-semibold">
-        Copia. Elige. Pega.
+        Copy. Choose. Paste.
       </h1>
 <p class="font-body-lg text-body-lg text-on-surface-variant max-w-[620px] mx-auto mb-10 leading-relaxed font-normal">
-        Tus últimos textos copiados, siempre a un simple <kbd class="px-2 py-0.5 rounded-md bg-surface-container-lowest font-kbd-shortcut text-kbd-shortcut text-on-surface shadow-[0_1px_1px_rgba(0,0,0,0.12)]">⌘V</kbd> de distancia.
+        Your latest copied texts, always a single <kbd class="px-2 py-0.5 rounded-md bg-surface-container-lowest font-kbd-shortcut text-kbd-shortcut text-on-surface shadow-[0_1px_1px_rgba(0,0,0,0.12)]">⌘V</kbd> away.
       </p>
 <!-- Action Buttons -->
 <div class="flex flex-col sm:flex-row items-center justify-center gap-space-md mb-16">
 <a class="group flex items-center gap-space-sm px-6 py-3 rounded-full bg-primary-container text-on-primary-container shadow-[0_8px_20px_rgba(0,113,227,0.24)] hover:shadow-[0_12px_28px_rgba(0,113,227,0.32)] hover:opacity-95 active:scale-98 transition-all" href="https://github.com/KidiNoise/copy4paste/releases/latest/download/copy4paste-macOS-universal.dmg" download>
 <span class="material-symbols-outlined text-[20px] transition-transform group-hover:translate-y-0.5" aria-hidden="true">&#xF090;</span>
 <div class="text-left">
-<span class="font-headline-sm text-headline-sm block leading-tight font-medium">Descargar para Mac</span>
-<span class="font-label-sm text-label-sm text-on-primary-container/85 block -mt-0.5">DMG universal · Gratis</span>
+<span class="font-headline-sm text-headline-sm block leading-tight font-medium">Download for Mac</span>
+<span class="font-label-sm text-label-sm text-on-primary-container/85 block -mt-0.5">Universal DMG · Free</span>
 </div>
 </a>
 <a class="inline-flex items-center gap-space-xs px-6 py-3.5 rounded-full bg-surface-container-high/90 text-on-surface hover:bg-surface-variant transition-colors shadow-[0_1px_2px_rgba(0,0,0,0.06)] active:scale-98" href="https://github.com/KidiNoise/copy4paste" rel="noopener noreferrer" target="_blank">
-<span class="font-label-md text-label-md font-medium">Ver en GitHub</span>
+<span class="font-label-md text-label-md font-medium">View on GitHub</span>
 <span class="material-symbols-outlined text-[16px] text-on-surface-variant" aria-hidden="true">&#xF8CE;</span>
 </a>
 </div>
-<p class="font-label-sm text-label-sm text-on-surface-variant -mt-12 mb-14">Windows y Linux, en camino.</p>
+<p class="font-label-sm text-label-sm text-on-surface-variant -mt-12 mb-14">Windows and Linux, on the way.</p>
 <!-- VISUAL PROTAGONISTA: Panel interactivo pixel-perfect inspirado en la imagen real -->
 <div class="relative w-full max-w-[560px] mx-auto flex flex-col items-center">
 <!-- Floating Window Container mimicking exact screenshot styling -->
@@ -67,8 +67,8 @@
 <div class="flex items-center justify-between pb-3 px-2 text-[#b0aeb4]">
 <span class="font-sans font-medium text-[16px] tracking-tight text-[#cfcdd4]">copy4paste</span>
 <div class="flex items-center gap-2.5">
-<span class="font-sans text-[13px] text-[#9d9ca2]">1 = última</span>
-<button aria-label="Ajustes" class="hover:text-white transition-colors focus:outline-none flex items-center justify-center p-0.5">
+<span class="font-sans text-[13px] text-[#9d9ca2]">1 = latest</span>
+<button aria-label="Settings" class="hover:text-white transition-colors focus:outline-none flex items-center justify-center p-0.5">
 <span class="material-symbols-outlined text-[16px] leading-none" aria-hidden="true">&#xE8B8;</span>
 </button>
 </div>
@@ -79,9 +79,9 @@
 <div class="c4p-row flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all duration-300 cursor-pointer hover:bg-[#4d4c52] text-[#e0dee4]" data-row="1">
 <div class="flex items-center gap-4 min-w-0">
 <span class="font-medium text-[#8e8d94] w-3 text-center text-[15px]">1</span>
-<span class="truncate text-[16px] font-normal tracking-tight">Texto reciente</span>
+<span class="truncate text-[16px] font-normal tracking-tight">Recent text</span>
 </div>
-<button class="c4p-close text-[#8e8d94] hover:text-white p-1 rounded transition-colors focus:outline-none flex items-center justify-center" title="Eliminar del historial">
+<button class="c4p-close text-[#8e8d94] hover:text-white p-1 rounded transition-colors focus:outline-none flex items-center justify-center" title="Remove from history">
 <span class="material-symbols-outlined text-[18px]" aria-hidden="true">&#xE5CD;</span>
 </button>
 </div>
@@ -89,9 +89,9 @@
 <div class="c4p-row flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all duration-300 cursor-pointer hover:bg-[#4d4c52] text-[#e0dee4]" data-row="2">
 <div class="flex items-center gap-4 min-w-0">
 <span class="font-medium text-[#8e8d94] w-3 text-center text-[15px]">2</span>
-<span class="truncate text-[16px] font-normal tracking-tight">Segundo texto de ejemplo</span>
+<span class="truncate text-[16px] font-normal tracking-tight">Second sample text</span>
 </div>
-<button class="c4p-close text-[#8e8d94] hover:text-white p-1 rounded transition-colors focus:outline-none flex items-center justify-center" title="Eliminar del historial">
+<button class="c4p-close text-[#8e8d94] hover:text-white p-1 rounded transition-colors focus:outline-none flex items-center justify-center" title="Remove from history">
 <span class="material-symbols-outlined text-[18px]" aria-hidden="true">&#xE5CD;</span>
 </button>
 </div>
@@ -99,9 +99,9 @@
 <div class="c4p-row flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all duration-300 cursor-pointer bg-[#5b5a60] text-white shadow-sm" data-row="3">
 <div class="flex items-center gap-4 min-w-0">
 <span class="font-medium text-[#c4c2ca] w-3 text-center text-[15px]">3</span>
-<span class="truncate text-[16px] font-normal tracking-tight">Tercer texto</span>
+<span class="truncate text-[16px] font-normal tracking-tight">Third text</span>
 </div>
-<button class="c4p-close text-[#9d9ca2] hover:text-white p-1 rounded transition-colors focus:outline-none flex items-center justify-center" title="Eliminar del historial">
+<button class="c4p-close text-[#9d9ca2] hover:text-white p-1 rounded transition-colors focus:outline-none flex items-center justify-center" title="Remove from history">
 <span class="material-symbols-outlined text-[18px]" aria-hidden="true">&#xE5CD;</span>
 </button>
 </div>
@@ -109,9 +109,9 @@
 <div class="c4p-row flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all duration-300 cursor-pointer hover:bg-[#4d4c52] text-[#e0dee4]" data-row="4">
 <div class="flex items-center gap-4 min-w-0">
 <span class="font-medium text-[#8e8d94] w-3 text-center text-[15px]">4</span>
-<span class="truncate text-[16px] font-normal tracking-tight">Cuarto texto</span>
+<span class="truncate text-[16px] font-normal tracking-tight">Fourth text</span>
 </div>
-<button class="c4p-close text-[#8e8d94] hover:text-white p-1 rounded transition-colors focus:outline-none flex items-center justify-center" title="Eliminar del historial">
+<button class="c4p-close text-[#8e8d94] hover:text-white p-1 rounded transition-colors focus:outline-none flex items-center justify-center" title="Remove from history">
 <span class="material-symbols-outlined text-[18px]" aria-hidden="true">&#xE5CD;</span>
 </button>
 </div>
@@ -121,9 +121,9 @@
 <div class="mt-6 flex flex-col items-center gap-1.5">
 <p class="font-body-sm text-body-sm text-on-surface-variant flex items-center gap-1.5">
 <span class="w-2 h-2 rounded-full bg-primary-container"></span>
-            El selector, tal como aparece al pulsar <kbd class="px-1.5 py-0.5 rounded bg-surface-container-high font-kbd-shortcut text-kbd-shortcut text-on-surface">⌘V</kbd>
+            The picker, exactly as it appears when you press <kbd class="px-1.5 py-0.5 rounded bg-surface-container-high font-kbd-shortcut text-kbd-shortcut text-on-surface">⌘V</kbd>
 </p>
-<span class="font-label-sm text-label-sm text-outline">Haz clic o pulsa las teclas 1-4 para interactuar</span>
+<span class="font-label-sm text-label-sm text-outline">Click a row or press keys 1-4 to interact</span>
 </div>
 </div>
 </div>
@@ -132,8 +132,8 @@
 <section id="como-funciona" class="w-full py-20 bg-surface-container-low/70">
 <div class="max-w-[1160px] mx-auto px-gutter-mobile lg:px-gutter">
 <div class="text-center max-w-[640px] mx-auto mb-16">
-<h2 class="font-headline-xl-mobile md:font-headline-xl text-headline-xl-mobile md:text-headline-xl text-on-surface tracking-tight mb-3">Flujo de trabajo natural</h2>
-<p class="font-body-md text-body-md text-on-surface-variant">Diseñado para no romper jamás tu concentración ni interrumpir la velocidad de tus dedos.</p>
+<h2 class="font-headline-xl-mobile md:font-headline-xl text-headline-xl-mobile md:text-headline-xl text-on-surface tracking-tight mb-3">A natural workflow</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">Built to never break your focus or slow your fingers down.</p>
 </div>
 <div class="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
 <!-- Step 1 -->
@@ -142,15 +142,15 @@
 <span class="material-symbols-outlined text-[24px]" aria-hidden="true">&#xE2EC;</span>
 </div>
 <div class="flex items-center gap-2 mb-2">
-<span class="font-label-sm text-label-sm font-semibold text-primary">PASO 01</span>
+<span class="font-label-sm text-label-sm font-semibold text-primary">STEP 01</span>
 </div>
-<h3 class="font-headline-sm text-headline-sm text-on-surface mb-2 font-medium">Copia varios textos</h3>
+<h3 class="font-headline-sm text-headline-sm text-on-surface mb-2 font-medium">Copy several texts</h3>
 <p class="font-body-md text-body-md text-on-surface-variant leading-relaxed mb-4">
-            Usa tu <kbd class="px-1.5 py-0.5 rounded bg-surface-container font-kbd-shortcut text-kbd-shortcut">⌘C</kbd> habitual de forma espontánea mientras navegas, investigas código o redactas documentos.
+            Use your usual <kbd class="px-1.5 py-0.5 rounded bg-surface-container font-kbd-shortcut text-kbd-shortcut">⌘C</kbd> as you go while browsing, digging through code or writing documents.
           </p>
 <div class="mt-auto pt-2 flex items-center gap-1.5 font-label-sm text-label-sm text-outline">
 <span class="material-symbols-outlined text-[15px] text-tertiary" aria-hidden="true">&#xF0BE;</span>
-            Almacenamiento silente
+            Silent storage
           </div>
 </div>
 <!-- Step 2 -->
@@ -159,15 +159,15 @@
 <span class="material-symbols-outlined text-[24px]" aria-hidden="true">&#xEAE7;</span>
 </div>
 <div class="flex items-center gap-2 mb-2">
-<span class="font-label-sm text-label-sm font-semibold text-primary">PASO 02</span>
+<span class="font-label-sm text-label-sm font-semibold text-primary">STEP 02</span>
 </div>
-<h3 class="font-headline-sm text-headline-sm text-on-surface mb-2 font-medium">Pulsa ⌘V</h3>
+<h3 class="font-headline-sm text-headline-sm text-on-surface mb-2 font-medium">Press ⌘V</h3>
 <p class="font-body-md text-body-md text-on-surface-variant leading-relaxed mb-4">
-            Se despliega instantáneamente el selector flotante exacto junto a la posición activa de tu cursor en cualquier aplicación.
+            The floating picker appears instantly right where your cursor is, in any app.
           </p>
 <div class="mt-auto pt-2 flex items-center gap-1.5 font-label-sm text-label-sm text-outline">
 <span class="material-symbols-outlined text-[15px] text-tertiary" aria-hidden="true">&#xF0BE;</span>
-            Sin latencia de animación
+            No animation latency
           </div>
 </div>
 <!-- Step 3 -->
@@ -176,15 +176,15 @@
 <span class="material-symbols-outlined text-[24px]" aria-hidden="true">&#xF045;</span>
 </div>
 <div class="flex items-center gap-2 mb-2">
-<span class="font-label-sm text-label-sm font-semibold text-primary">PASO 03</span>
+<span class="font-label-sm text-label-sm font-semibold text-primary">STEP 03</span>
 </div>
-<h3 class="font-headline-sm text-headline-sm text-on-surface mb-2 font-medium">Elige cuál pegar</h3>
+<h3 class="font-headline-sm text-headline-sm text-on-surface mb-2 font-medium">Pick which one to paste</h3>
 <p class="font-body-md text-body-md text-on-surface-variant leading-relaxed mb-4">
-            Presiona la tecla numérica (<kbd class="px-1 py-0.5 rounded bg-surface-container font-kbd-shortcut text-kbd-shortcut">1</kbd> al <kbd class="px-1 py-0.5 rounded bg-surface-container font-kbd-shortcut text-kbd-shortcut">4</kbd>) y continúa trabajando sin despegar jamás las manos del teclado.
+            Press the number key (<kbd class="px-1 py-0.5 rounded bg-surface-container font-kbd-shortcut text-kbd-shortcut">1</kbd> to <kbd class="px-1 py-0.5 rounded bg-surface-container font-kbd-shortcut text-kbd-shortcut">4</kbd>) and keep working without ever leaving the keyboard.
           </p>
 <div class="mt-auto pt-2 flex items-center gap-1.5 font-label-sm text-label-sm text-outline">
 <span class="material-symbols-outlined text-[15px] text-tertiary" aria-hidden="true">&#xF0BE;</span>
-            Pegado automático en foco
+            Pastes straight into focus
           </div>
 </div>
 </div>
@@ -194,19 +194,19 @@
 <section id="caracteristicas" class="w-full py-24 bg-surface">
 <div class="max-w-[1160px] mx-auto px-gutter-mobile lg:px-gutter">
 <div class="text-center max-w-[600px] mx-auto mb-16">
-<h2 class="font-headline-xl-mobile md:font-headline-xl text-headline-xl-mobile md:text-headline-xl text-on-surface tracking-tight mb-3">Diseñado con rigor nativo</h2>
-<p class="font-body-md text-body-md text-on-surface-variant">Sin capas pesadas de electron, sin telemetrías ocultas. Pura precisión de utilidad de sistema.</p>
+<h2 class="font-headline-xl-mobile md:font-headline-xl text-headline-xl-mobile md:text-headline-xl text-on-surface tracking-tight mb-3">Built with native discipline</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">No heavy Electron layers, no hidden telemetry. Pure system-utility precision.</p>
 </div>
 <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-<!-- Card 1: Selección rápida con teclado -->
+<!-- Card 1: Fast keyboard selection -->
 <div class="bg-surface-container-low p-8 rounded-2xl flex flex-col justify-between shadow-[0_1px_4px_rgba(0,0,0,0.02)]">
 <div>
 <div class="w-10 h-10 rounded-lg bg-surface-container-highest flex items-center justify-center text-on-surface mb-6">
 <span class="material-symbols-outlined text-[20px]" aria-hidden="true">&#xE312;</span>
 </div>
-<h3 class="font-headline-md text-headline-md text-on-surface mb-3 font-semibold">Selección rápida con teclado</h3>
+<h3 class="font-headline-md text-headline-md text-on-surface mb-3 font-semibold">Fast keyboard selection</h3>
 <p class="font-body-md text-body-md text-on-surface-variant leading-relaxed mb-6">
-              Presiona <kbd class="px-1.5 py-0.5 rounded bg-surface-container-lowest font-kbd-shortcut text-kbd-shortcut shadow-[0_1px_1px_rgba(0,0,0,0.06)]">⌘V</kbd> y elige al instante con las teclas numéricas del 1 al 4 sin usar el ratón ni apartar la vista.
+              Press <kbd class="px-1.5 py-0.5 rounded bg-surface-container-lowest font-kbd-shortcut text-kbd-shortcut shadow-[0_1px_1px_rgba(0,0,0,0.06)]">⌘V</kbd> and choose instantly with the number keys 1 to 4, without touching the mouse or looking away.
             </p>
 </div>
 <!-- Mini keyboard visual preview -->
@@ -217,25 +217,25 @@
 <span class="px-2 py-1 rounded bg-surface-container font-kbd-shortcut text-kbd-shortcut font-semibold">3</span>
 <span class="px-2 py-1 rounded bg-surface-container font-kbd-shortcut text-kbd-shortcut font-semibold">4</span>
 </div>
-<span class="font-label-sm text-label-sm text-on-surface-variant font-medium">Sin ventanas ni esperas</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant font-medium">No windows, no waiting</span>
 </div>
 </div>
-<!-- Card 2: Historial configurable -->
+<!-- Card 2: Configurable history -->
 <div class="bg-surface-container-low p-8 rounded-2xl flex flex-col justify-between shadow-[0_1px_4px_rgba(0,0,0,0.02)]">
 <div>
 <div class="w-10 h-10 rounded-lg bg-surface-container-highest flex items-center justify-center text-on-surface mb-6">
 <span class="material-symbols-outlined text-[20px]" aria-hidden="true">&#xE429;</span>
 </div>
-<h3 class="font-headline-md text-headline-md text-on-surface mb-3 font-semibold">Historial configurable</h3>
+<h3 class="font-headline-md text-headline-md text-on-surface mb-3 font-semibold">Configurable history</h3>
 <p class="font-body-md text-body-md text-on-surface-variant leading-relaxed mb-6">
-              Ajusta la memoria temporal de 1 a 30 textos según tu flujo de trabajo directamente en el panel de preferencias sin configuraciones complejas.
+              Set the temporary memory from 1 to 30 texts right in the settings panel, with nothing complicated to configure.
             </p>
 </div>
 <!-- Slider graphic preview -->
 <div class="p-3.5 bg-surface-container-lowest rounded-xl flex flex-col gap-2">
 <div class="flex justify-between items-center font-label-sm text-label-sm text-on-surface-variant">
-<span class="">Límite en memoria</span>
-<span class="font-semibold text-primary">4 textos (Recomendado)</span>
+<span class="">Memory limit</span>
+<span class="font-semibold text-primary">4 texts (recommended)</span>
 </div>
 <div class="w-full bg-surface-container h-1.5 rounded-full overflow-hidden">
 <div class="bg-primary-container h-full w-[28%] rounded-full"></div>
@@ -248,17 +248,17 @@
 <div class="w-10 h-10 rounded-lg bg-surface-container-highest flex items-center justify-center text-on-surface mb-6">
 <span class="material-symbols-outlined text-[20px]" aria-hidden="true">&#xE322;</span>
 </div>
-<h3 class="font-headline-md text-headline-md text-on-surface mb-3 font-semibold">Privacidad: 100% en RAM</h3>
+<h3 class="font-headline-md text-headline-md text-on-surface mb-3 font-semibold">Privacy: 100% in RAM</h3>
 <p class="font-body-md text-body-md text-on-surface-variant leading-relaxed mb-6">
-              Almacenamiento exclusivamente temporal y volátil en memoria RAM. Nada se guarda en disco, nada sale de tu Mac y se elimina al cerrar. Cero IA, cero nube, cero telemetría.
+              Temporary, volatile storage in RAM only. Nothing touches the disk, nothing leaves your Mac, and it is gone when the app quits. Zero AI, zero cloud, zero telemetry.
             </p>
 </div>
 <!-- Badge of local privacy -->
 <div class="p-3.5 bg-surface-container-lowest rounded-xl flex items-center gap-2.5">
 <span class="material-symbols-outlined text-[20px] text-tertiary" aria-hidden="true">&#xE899;</span>
 <div class="flex flex-col">
-<span class="font-label-sm text-label-sm font-semibold text-on-surface">Sin red ni telemetría</span>
-<span class="font-label-sm text-label-sm text-outline">Nada sale de tu Mac</span>
+<span class="font-label-sm text-label-sm font-semibold text-on-surface">No network, no telemetry</span>
+<span class="font-label-sm text-label-sm text-outline">Nothing leaves your Mac</span>
 </div>
 </div>
 </div>
@@ -270,11 +270,11 @@
 <div class="max-w-[1160px] mx-auto px-gutter-mobile lg:px-gutter">
 <div class="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-4">
 <div>
-<span class="font-label-sm text-label-sm font-semibold uppercase tracking-wider text-primary mb-2 block">Puesta en marcha</span>
-<h2 class="font-headline-xl-mobile md:font-headline-xl text-headline-xl-mobile md:text-headline-xl text-on-surface tracking-tight">Instalación y primera apertura</h2>
+<span class="font-label-sm text-label-sm font-semibold uppercase tracking-wider text-primary mb-2 block">Getting started</span>
+<h2 class="font-headline-xl-mobile md:font-headline-xl text-headline-xl-mobile md:text-headline-xl text-on-surface tracking-tight">Install and first launch</h2>
 </div>
 <p class="font-body-md text-body-md text-on-surface-variant max-w-[420px]">
-          Listo para usar en menos de 30 segundos con total transparencia de código.
+          Ready in under 30 seconds, with the whole source in the open.
         </p>
 </div>
 <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
@@ -285,9 +285,9 @@
               1
             </div>
 <div>
-<h4 class="font-headline-sm text-headline-sm text-on-surface font-medium mb-1">Descarga el archivo DMG</h4>
+<h4 class="font-headline-sm text-headline-sm text-on-surface font-medium mb-1">Download the DMG</h4>
 <p class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed">
-                Obtén el binario universal: Apple Silicon e Intel, en un solo DMG.
+                Get the universal binary: Apple Silicon and Intel, in a single DMG.
               </p>
 </div>
 </div>
@@ -296,9 +296,9 @@
               2
             </div>
 <div>
-<h4 class="font-headline-sm text-headline-sm text-on-surface font-medium mb-1">Arrastra a Aplicaciones</h4>
+<h4 class="font-headline-sm text-headline-sm text-on-surface font-medium mb-1">Drag it to Applications</h4>
 <p class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed">
-                Abre la imagen de disco descargada y arrastra el icono de Copy4Paste hacia tu carpeta de Aplicaciones del sistema.
+                Open the downloaded disk image and drag the copy4paste icon into your Applications folder.
               </p>
 </div>
 </div>
@@ -307,9 +307,9 @@
               3
             </div>
 <div>
-<h4 class="font-headline-sm text-headline-sm text-on-surface font-medium mb-1">Concede permisos de Accesibilidad</h4>
+<h4 class="font-headline-sm text-headline-sm text-on-surface font-medium mb-1">Grant Accessibility permission</h4>
 <p class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed">
-                En <em>Ajustes del Sistema &gt; Privacidad y Seguridad &gt; Accesibilidad</em>, activa Copy4Paste para permitir la detección del atajo global del portapapeles.
+                In <em>System Settings &gt; Privacy &amp; Security &gt; Accessibility</em>, enable copy4paste so it can catch the global shortcut.
               </p>
 </div>
 </div>
@@ -320,50 +320,50 @@
 <div class="p-6 rounded-2xl bg-surface-container-high/60 backdrop-blur-md">
 <div class="flex items-center gap-2.5 mb-3 text-on-surface">
 <span class="material-symbols-outlined text-[20px] text-primary" aria-hidden="true">&#xF013;</span>
-<h4 class="font-headline-sm text-headline-sm font-semibold">Aviso de macOS Gatekeeper</h4>
+<h4 class="font-headline-sm text-headline-sm font-semibold">macOS Gatekeeper notice</h4>
 </div>
 <p class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed mb-4">
-              La app es de código abierto y no está notarizada por Apple, así que macOS desconfía de ella la primera vez. Es el único aviso que vas a ver, y solo una vez:
+              The app is open source and not notarized by Apple, so macOS distrusts it the first time. It is the only warning you will see, and only once:
             </p>
 <div class="bg-surface-container-lowest/80 p-3.5 rounded-xl font-body-sm text-body-sm text-on-surface space-y-2">
 <div class="flex items-start gap-2">
 <span class="font-semibold text-on-surface shrink-0">1.</span>
-<span>Haz <strong>clic derecho</strong> sobre la app → <strong>Abrir</strong>.</span>
+<span><strong>Right-click</strong> the app → <strong>Open</strong>.</span>
 </div>
 <div class="flex items-start gap-2">
 <span class="font-semibold text-on-surface shrink-0">2.</span>
-<span>En <strong>macOS 15 o posterior</strong> ese botón puede no aparecer: ve a <strong>Ajustes del Sistema → Privacidad y seguridad</strong> y pulsa <strong>«Abrir igualmente»</strong>.</span>
+<span>On <strong>macOS 15 or later</strong> that button may be missing: go to <strong>System Settings → Privacy &amp; Security</strong> and click <strong>“Open Anyway”</strong>.</span>
 </div>
-<div class="text-on-surface-variant pl-0.5">Después, concede <strong>Accesibilidad</strong> y listo.</div>
+<div class="text-on-surface-variant pl-0.5">Then grant <strong>Accessibility</strong> and you are set.</div>
 </div>
 </div>
 <!-- Ficha Técnica -->
 <div class="p-6 rounded-2xl bg-surface-container-lowest shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
-<h4 class="font-headline-sm text-headline-sm text-on-surface font-semibold mb-4">Especificaciones técnicas</h4>
+<h4 class="font-headline-sm text-headline-sm text-on-surface font-semibold mb-4">Technical specifications</h4>
 <dl class="space-y-3 font-body-sm text-body-sm">
 <div class="flex justify-between items-center py-1">
-<dt class="text-on-surface-variant">Versión</dt>
+<dt class="text-on-surface-variant">Version</dt>
 <dd class="font-medium text-on-surface">1.1</dd>
 </div>
 <div class="flex justify-between items-center py-1">
-<dt class="text-on-surface-variant">Arquitectura</dt>
-<dd class="font-medium text-on-surface">Binario Universal (Apple Silicon &amp; x86_64)</dd>
+<dt class="text-on-surface-variant">Architecture</dt>
+<dd class="font-medium text-on-surface">Universal binary (Apple Silicon &amp; x86_64)</dd>
 </div>
 <div class="flex justify-between items-center py-1">
-<dt class="text-on-surface-variant">Tamaño del instalador</dt>
+<dt class="text-on-surface-variant">Installer size</dt>
 <dd class="font-medium text-on-surface">&lt; 1 MB</dd>
 </div>
 <div class="flex justify-between items-center py-1">
-<dt class="text-on-surface-variant">Licencia</dt>
+<dt class="text-on-surface-variant">License</dt>
 <dd class="font-medium text-on-surface">MIT (Open Source)</dd>
 </div>
 <div class="flex justify-between items-center py-1">
-<dt class="text-on-surface-variant">Plataformas</dt>
-<dd class="font-medium text-on-surface">macOS · Windows y Linux en camino</dd>
+<dt class="text-on-surface-variant">Platforms</dt>
+<dd class="font-medium text-on-surface">macOS · Windows and Linux on the way</dd>
 </div>
 <div class="flex justify-between items-center py-1">
-<dt class="text-on-surface-variant">Dependencias</dt>
-<dd class="font-medium text-on-surface">Solo frameworks del sistema</dd>
+<dt class="text-on-surface-variant">Dependencies</dt>
+<dd class="font-medium text-on-surface">System frameworks only</dd>
 </div>
 </dl>
 </div>
@@ -378,21 +378,21 @@
 <span class="material-symbols-outlined text-[32px]" aria-hidden="true">&#xE14F;</span>
 </div>
 <h2 class="font-headline-xl-mobile md:font-headline-xl text-headline-xl-mobile md:text-headline-xl text-on-surface tracking-tight mb-4 font-semibold">
-        El portapapeles que siempre has querido</h2>
+        The clipboard you always wanted</h2>
 <p class="font-body-lg text-body-lg text-on-surface-variant mb-10 max-w-[540px]">
-        Sin suscripciones, sin registros, sin servicios en segundo plano consumiendo tu batería.
+        No subscriptions, no sign-ups, no background services draining your battery.
       </p>
 <div class="flex flex-col sm:flex-row items-center gap-space-md mb-8">
 <a class="group flex items-center gap-space-sm px-8 py-4 rounded-full bg-primary-container text-on-primary-container shadow-[0_8px_24px_rgba(0,113,227,0.28)] hover:shadow-[0_14px_32px_rgba(0,113,227,0.36)] hover:opacity-95 active:scale-98 transition-all" href="https://github.com/KidiNoise/copy4paste/releases/latest/download/copy4paste-macOS-universal.dmg" download>
 <span class="material-symbols-outlined text-[22px]" aria-hidden="true">&#xF090;</span>
-<span class="font-headline-sm text-headline-sm font-medium">Descargar Copy4Paste.dmg</span>
+<span class="font-headline-sm text-headline-sm font-medium">Download copy4paste.dmg</span>
 </a>
 <a class="inline-flex items-center gap-space-xs px-6 py-4 rounded-full bg-surface-container text-on-surface hover:bg-surface-variant transition-colors" href="https://github.com/KidiNoise/copy4paste" rel="noopener noreferrer" target="_blank">
-<span class="font-label-md text-label-md font-medium">Releases en GitHub</span>
+<span class="font-label-md text-label-md font-medium">Releases on GitHub</span>
 <span class="material-symbols-outlined text-[16px] text-on-surface-variant" aria-hidden="true">&#xF8CE;</span>
 </a>
 </div>
-<a class="inline-flex items-center gap-2 font-kbd-shortcut text-kbd-shortcut text-outline bg-surface-container-low px-4 py-2 rounded-lg hover:text-on-surface transition-colors" href="https://github.com/KidiNoise/copy4paste/releases/latest/download/SHA256SUMS" rel="noopener"><span class="font-semibold text-on-surface-variant">SHA-256</span><span class="tracking-normal">comprobar descarga</span><span class="material-symbols-outlined text-[14px]" aria-hidden="true">&#xF8CE;</span></a>
+<a class="inline-flex items-center gap-2 font-kbd-shortcut text-kbd-shortcut text-outline bg-surface-container-low px-4 py-2 rounded-lg hover:text-on-surface transition-colors" href="https://github.com/KidiNoise/copy4paste/releases/latest/download/SHA256SUMS" rel="noopener"><span class="font-semibold text-on-surface-variant">SHA-256</span><span class="tracking-normal">verify download</span><span class="material-symbols-outlined text-[14px]" aria-hidden="true">&#xF8CE;</span></a>
 </div>
 </section>
 <!-- Script interactivo mínimo para la animación elegante de la interfaz flotante -->
@@ -460,7 +460,7 @@
       startAutoCycle();
     })();
   </script>
-</div></main><footer class="w-full bg-surface-container-low shadow-[0_-1px_8px_rgba(0,0,0,0.02)] py-space-xl"><div class="max-w-[1160px] mx-auto px-gutter-mobile lg:px-gutter flex flex-col md:flex-row items-center justify-between gap-space-lg"><div class="flex flex-col items-center md:items-start gap-space-xs"><div class="flex items-center gap-space-sm"><div class="w-5 h-5 rounded bg-surface-container-highest flex items-center justify-center"><span class="material-symbols-outlined text-[13px] text-on-surface-variant" aria-hidden="true">&#xE14F;</span></div><span class="font-label-md text-label-md text-on-surface">Copy4Paste</span></div><p class="font-body-sm text-body-sm text-on-surface-variant">Distribuido con código abierto bajo Licencia MIT.</p></div><div class="flex items-center gap-space-lg"><a class="font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors" href="#instalacion">Instalación</a><a class="font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors" href="https://github.com/KidiNoise/copy4paste" rel="noopener">GitHub</a><a class="font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors" href="https://github.com/KidiNoise/copy4paste/blob/main/LICENSE" rel="noopener">Licencia</a><a class="font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors" href="https://github.com/KidiNoise/copy4paste#privacidad" rel="noopener">Privacidad</a></div></div></footer>
+</div></main><footer class="w-full bg-surface-container-low shadow-[0_-1px_8px_rgba(0,0,0,0.02)] py-space-xl"><div class="max-w-[1160px] mx-auto px-gutter-mobile lg:px-gutter flex flex-col md:flex-row items-center justify-between gap-space-lg"><div class="flex flex-col items-center md:items-start gap-space-xs"><div class="flex items-center gap-space-sm"><div class="w-5 h-5 rounded bg-surface-container-highest flex items-center justify-center"><span class="material-symbols-outlined text-[13px] text-on-surface-variant" aria-hidden="true">&#xE14F;</span></div><span class="font-label-md text-label-md text-on-surface">Copy4Paste</span></div><p class="font-body-sm text-body-sm text-on-surface-variant">Open source, distributed under the MIT License.</p></div><div class="flex items-center gap-space-lg"><a class="font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors" href="#instalacion">Installation</a><a class="font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors" href="https://github.com/KidiNoise/copy4paste" rel="noopener">GitHub</a><a class="font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors" href="https://github.com/KidiNoise/copy4paste/blob/main/LICENSE" rel="noopener">License</a><a class="font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors" href="https://github.com/KidiNoise/copy4paste#privacidad" rel="noopener">Privacy</a></div></div></footer>
 
 <script>
     (function () {

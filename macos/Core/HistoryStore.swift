@@ -1,6 +1,6 @@
 import Foundation
 
-/// Historial de texto residente solo en memoria: sin ficheros ni servicios externos.
+/// Text history that lives only in memory: no files, no external services.
 struct HistoryStore {
     private(set) var entries: [String] = []
     private(set) var capacity: Int
@@ -12,7 +12,7 @@ struct HistoryStore {
         self.maximumBytes = maximumBytes
     }
 
-    /// Cambiar capacidad trunca el historial actual sin copiarlo a disco.
+    /// Changing the capacity trims the current history without writing to disk.
     mutating func setCapacity(_ newCapacity: Int) {
         precondition(newCapacity > 0)
         capacity = newCapacity
@@ -28,7 +28,7 @@ struct HistoryStore {
         return true
     }
 
-    /// Eliminar una copia concreta sin modificar el orden de las demás.
+    /// Remove a single copy without disturbing the order of the rest.
     @discardableResult
     mutating func remove(_ text: String) -> Bool {
         guard let index = entries.firstIndex(of: text) else { return false }

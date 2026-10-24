@@ -1,47 +1,50 @@
 # copy4paste 1.1
 
-El portapapeles con historial para Mac. Copia varios textos y elige cuál pegar con una tecla.
+The clipboard with history for Mac. Copy several texts and choose which one to paste with one key.
 
-## Descarga
+## Download
 
-- `copy4paste-macOS-universal.dmg` — instalador universal (**Intel 10.15 Catalina+** y
-  **Apple Silicon 11 Big Sur+**), DMG en HFS+.
-- `copy4paste-macOS-universal.zip` — la misma app comprimida.
-- `SHA256SUMS` — hashes para comprobar la descarga.
+- `copy4paste-macOS-universal.dmg` — universal installer (**Intel 10.15 Catalina+** and
+  **Apple Silicon 11 Big Sur+**), HFS+ DMG.
+- `copy4paste-macOS-universal.zip` — the same app, zipped.
+- `SHA256SUMS` — checksums to verify the download.
 
-## Instalación
+## Installation
 
-1. Abre el DMG y arrastra `copy4paste.app` a **Aplicaciones**.
-2. Primer arranque: **clic derecho → Abrir**.
-3. Ajustes del Sistema → Privacidad y seguridad → **Accesibilidad** → activa `copy4paste`.
-4. Copia dos textos distintos y pulsa `⌘V`.
+1. Open the DMG and drag `copy4paste.app` to **Applications**.
+2. First launch: **right-click → Open**.
+3. System Settings → Privacy & Security → **Accessibility** → enable `copy4paste`.
+4. Copy two different texts and press `⌘V`.
 
-## Novedades de la 1.1
+## What is new in 1.1
 
-- Botón **⚙** en el selector para abrir Ajustes.
-- **Copias**: 4 por defecto, ajustable de 1 a 30.
-- **Skins**: Oscuro, Claro, Cian y Medianoche.
-- **Opacidad**: porcentaje editable (20–100 %), sin animaciones ni temporizadores.
-- Selección y borrado seguros sobre la instantánea visible.
-- Botón **Salir** en Ajustes.
+- **⚙** button in the picker to open Settings.
+- **Copies**: 4 by default, adjustable from 1 to 30.
+- **Skins**: Dark, Light, Cyan and Midnight.
+- **Opacity**: editable percentage (20–100 %), no animations, no timers.
+- Selection and deletion act on the visible snapshot, so a clipboard change cannot make the app
+  delete or paste the wrong entry.
+- **Quit** button in Settings.
 
-## Aviso importante
+## Important notice
 
-El binario lleva **firma ad hoc** y **no está notarizado por Apple**: no hay cuenta Apple Developer
-detrás del proyecto. Gatekeeper pedirá confirmación la primera vez. En Catalina o posterior:
-clic derecho sobre `copy4paste.app` → **Abrir**. El permiso de Accesibilidad está ligado a la firma,
-así que cada recompilación exige volver a marcarlo una vez.
+The binary is **signed ad hoc** and **not notarized by Apple**: there is no Apple Developer account
+behind the project. Gatekeeper will ask for confirmation the first time. On Catalina or later:
+right-click `copy4paste.app` → **Open**. On macOS 15 and later you may need System Settings →
+Privacy & Security → **Open Anyway** instead. The Accessibility permission is tied to the signature,
+so every rebuild needs it granted again.
 
-## Verificación
+## Verification
 
-- 18 comprobaciones del historial en `Tests/main.swift`.
-- Prueba de interfaz (`--verify-ui`): una cruz por fila, cruz que recibe clics, texto que no bloquea
-  el clic, selección que se mantiene y borrado conectado.
-- Prueba de ejecución (`--verify-runtime`): historial leído del portapapeles real (dos textos, en orden)
-  y estado del tap de teclado.
-- Binario universal verificado con `lipo` y versiones mínimas con `vtool`.
-- DMG montado en CI y binario comprobado dentro de la imagen.
-- Prueba real del atajo `⌘V` con el selector flotante en un Mac con **macOS Catalina 10.15.7 (Intel)**.
+- 18 history checks in `macos/Tests/main.swift`.
+- Interface test (`--verify-ui`): one cross per row, cross receives clicks, text does not block
+  clicks, selection sticks and deletion is wired.
+- Runtime test (`--verify-runtime`): history read from the real clipboard (two texts, in order) and
+  event tap state.
+- Universal binary verified with `lipo` and minimum versions with `vtool`.
+- DMG mounted in CI and the binary inside the image checked.
+- The real `⌘V` shortcut and the floating picker were tested on a Mac running
+  **macOS Catalina 10.15.7 (Intel)**.
 
-Construido en GitHub Actions sobre `macos-15-intel` a partir de este repositorio. Sin dependencias
-externas: solo frameworks del sistema.
+Built on GitHub Actions on `macos-15-intel` from this repository. No external dependencies: system
+frameworks only.

@@ -10,14 +10,14 @@ permissions:
 
 jobs:
   build:
-    # El único runner macOS x86_64 disponible en GitHub. Compilamos las dos
-    # arquitecturas y las unimos con lipo.
+    # The only x86_64 macOS runner available on GitHub. Both architectures are
+    # compiled here and merged with lipo.
     runs-on: macos-15-intel
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
 
-      - name: Entorno del runner
+      - name: Runner environment
         run: |
           set -euo pipefail
           sw_vers
@@ -25,13 +25,13 @@ jobs:
           uname -m
           xcrun --sdk macosx --show-sdk-version
 
-      - name: Tests del historial
+      - name: History tests
         run: |
           set -euo pipefail
           swiftc -swift-version 5 macos/Core/HistoryStore.swift macos/Tests/main.swift -o "$RUNNER_TEMP/history-test"
           "$RUNNER_TEMP/history-test"
 
-      - name: Compilar universal (Intel 10.15 + Apple Silicon 11.0)
+      - name: Build universal (Intel 10.15 + Apple Silicon 11.0)
         shell: bash
         run: |
           set -euo pipefail
@@ -53,30 +53,30 @@ jobs:
                build/copy4paste-x86_64 build/copy4paste-arm64
           lipo -info "$APP/Contents/MacOS/copy4paste"
 
-      - name: Verificar binario y versiones mínimas
+      - name: Verify binary and minimum versions
         run: |
           set -euo pipefail
           BIN="dist/copy4paste.app/Contents/MacOS/copy4paste"
           test -x "$BIN"
           file "$BIN"
           xcrun vtool -show-build "$BIN"
-          # Con destino < 10.16 el linker emite LC_VERSION_MIN_MACOSX ("version"),
-          # no LC_BUILD_VERSION ("minos"). Se aceptan ambos formatos.
+          # For targets below 10.16 the linker emits LC_VERSION_MIN_MACOSX ("version"),
+          # not LC_BUILD_VERSION ("minos"). Both formats are accepted.
           xcrun vtool -show-build -arch x86_64 "$BIN" | grep -qE '(minos|version) 10\.15'
           xcrun vtool -show-build -arch arm64  "$BIN" | grep -qE '(minos|version) 11\.0'
           "$BIN" --version
 
-      - name: Comprobar el icono
+      - name: Check the app icon
         run: |
           set -euo pipefail
           test -f dist/copy4paste.app/Contents/Resources/icon.icns
           file dist/copy4paste.app/Contents/Resources/icon.icns
           /usr/libexec/PlistBuddy -c 'Print :CFBundleIconFile' dist/copy4paste.app/Contents/Info.plist
 
-      - name: Prueba de interfaz (cruces, sombreado, borrado)
+      - name: Interface test (crosses, highlight, delete)
         run: ./dist/copy4paste.app/Contents/MacOS/copy4paste --verify-ui
 
-      - name: Prueba de ejecución (portapapeles, historial, tap)
+      - name: Runtime test (clipboard, history, event tap)
         run: |
           set -euo pipefail
           rm -f /tmp/copy4paste-verify.log
@@ -86,7 +86,7 @@ jobs:
           grep -q 'ENTRIES=\["VERIFY-DOS", "VERIFY-UNO"\]' /tmp/copy4paste-verify.log
           grep -q 'IS_TEXT=true' /tmp/copy4paste-verify.log
 
-      - name: Importar certificado Developer ID (si está configurado)
+      - name: Import Developer ID certificate (if configured)
         id: signing
         env:
           CERT_P12: ${{ secrets.MACOS_CERT_P12 }}
@@ -94,7 +94,7 @@ jobs:
         run: |
           set -euo pipefail
           if [ -z "${CERT_P12:-}" ]; then
-            echo "Sin certificado: se firma ad hoc."
+            echo "No certificate: signing ad hoc."
             echo "identity=-" >> "$GITHUB_OUTPUT"
             exit 0
           fi
@@ -108,11 +108,11 @@ jobs:
           security set-key-partition-list -S apple-tool:,apple: -s -k actions "$KEYCHAIN" >/dev/null
           security list-keychains -d user -s "$KEYCHAIN" $(security list-keychains -d user | tr -d '"')
           IDENTITY="$(security find-identity -v -p codesigning "$KEYCHAIN" | sed -n 's/.*"\(.*\)"/\1/p' | head -1)"
-          echo "Identidad: $IDENTITY"
+          echo "Identity: $IDENTITY"
           test -n "$IDENTITY"
           echo "identity=$IDENTITY" >> "$GITHUB_OUTPUT"
 
-      - name: Firmar y empaquetar
+      - name: Sign and package
         shell: bash
         env:
           IDENTITY: ${{ steps.signing.outputs.identity }}
@@ -122,7 +122,7 @@ jobs:
           if [ "$IDENTITY" = "-" ]; then
             codesign --force --deep --sign - "$APP"
           else
-            # Hardened Runtime + timestamp: obligatorios para notarizar.
+            # Hardened Runtime + timestamp: required for notarization.
             codesign --force --deep --options runtime --timestamp \
               --sign "$IDENTITY" "$APP"
           fi
@@ -132,7 +132,7 @@ jobs:
           mkdir -p dist/dmg
           cp -R "$APP" dist/dmg/
           ln -s /Applications dist/dmg/Applications
-          # HFS+ explícito: Catalina monta HFS+ sin sorpresas; el APFS de macOS 15 no siempre.
+          # Explicit HFS+: Catalina mounts HFS+ without surprises; macOS 15 APFS does not always.
           hdiutil create -volname copy4paste -srcfolder dist/dmg \
             -fs HFS+ -format UDZO -ov dist/copy4paste-macOS-universal.dmg
           if [ "$IDENTITY" != "-" ]; then
@@ -140,7 +140,7 @@ jobs:
           fi
           ditto -c -k --sequesterRsrc --keepParent "$APP" dist/copy4paste-macOS-universal.zip
 
-      - name: Notarizar (si hay credenciales de Apple)
+      - name: Notarize (if Apple credentials are present)
         if: steps.signing.outputs.identity != '-'
         shell: bash
         env:
@@ -150,7 +150,7 @@ jobs:
         run: |
           set -euo pipefail
           if [ -z "${APPLE_ID:-}" ] || [ -z "${APPLE_PASSWORD:-}" ] || [ -z "${APPLE_TEAM_ID:-}" ]; then
-            echo "::warning::Firmado con Developer ID pero sin credenciales de Apple: no se notariza."
+            echo "::warning::Signed with Developer ID but no Apple credentials: skipping notarization."
             exit 0
           fi
           xcrun notarytool submit dist/copy4paste-macOS-universal.zip \
@@ -166,12 +166,12 @@ jobs:
           xcrun stapler validate dist/copy4paste-macOS-universal.dmg
           spctl --assess --type open --context context:primary-signature -v dist/copy4paste-macOS-universal.dmg
 
-      - name: Hashes
+      - name: Checksums
         run: |
           set -euo pipefail
           cd dist && shasum -a 256 copy4paste-macOS-universal.dmg copy4paste-macOS-universal.zip > SHA256SUMS && cat SHA256SUMS
 
-      - name: Comprobar el DMG montado
+      - name: Inspect the mounted DMG
         run: |
           set -euo pipefail
           hdiutil attach dist/copy4paste-macOS-universal.dmg -nobrowse -mountpoint /tmp/c4p-dmg
