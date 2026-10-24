@@ -7,6 +7,8 @@
 [Web del proyecto](https://kidinoise.github.io/copy4paste/) ·
 [Licencia MIT](LICENSE)
 
+[![copy4paste — Copia. Elige. Pega.](docs/assets/og.png)](https://kidinoise.github.io/copy4paste/)
+
 Utilidad nativa de AppKit, sin Electron ni dependencias externas. Todo el historial vive en RAM.
 
 ## Qué hace
