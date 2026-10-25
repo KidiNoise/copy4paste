@@ -1,0 +1,13 @@
+{
+  "name": "Sunset",
+  "author": "copy4paste community",
+  "colors": {
+    "background": "#2B1B24",
+    "selection": "#C2410CD9",
+    "foreground": "#FDEBD0",
+    "muted": "#D6A98F",
+    "delete": "#F4C6A6"
+  },
+  "appearance": "dark",
+  "cornerRadius": 12
+}

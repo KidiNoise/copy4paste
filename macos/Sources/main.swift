@@ -3,59 +3,22 @@ import ApplicationServices
 import CoreGraphics
 
 // copy4paste: a lightweight clipboard. macOS 10.15+, Intel.
-private enum Skin: Int, CaseIterable {
-    case dark = 0
-    case light = 1
-    case cyan = 2
-    case midnight = 3
 
-    var title: String {
-        switch self {
-        case .dark: return "Dark"
-        case .light: return "Light"
-        case .cyan: return "Cyan"
-        case .midnight: return "Midnight"
-        }
-    }
-    var background: NSColor {
-        switch self {
-        case .dark: return NSColor(calibratedRed: 0.15, green: 0.15, blue: 0.17, alpha: 1)
-        case .light: return NSColor(calibratedRed: 0.96, green: 0.96, blue: 0.97, alpha: 1)
-        case .cyan: return NSColor(calibratedRed: 0.03, green: 0.14, blue: 0.18, alpha: 1)
-        case .midnight: return NSColor(calibratedRed: 0.05, green: 0.07, blue: 0.16, alpha: 1)
-        }
-    }
-    var selection: NSColor {
-        switch self {
-        case .dark: return NSColor(calibratedWhite: 1, alpha: 0.18)
-        case .light: return NSColor(calibratedRed: 0.55, green: 0.65, blue: 0.82, alpha: 0.55)
-        case .cyan: return NSColor(calibratedRed: 0.05, green: 0.45, blue: 0.55, alpha: 0.85)
-        case .midnight: return NSColor(calibratedRed: 0.18, green: 0.25, blue: 0.55, alpha: 0.85)
-        }
-    }
-    var foreground: NSColor {
-        switch self {
-        case .light: return NSColor(calibratedWhite: 0.10, alpha: 1)
-        default: return NSColor(calibratedWhite: 0.96, alpha: 1)
-        }
-    }
-    var muted: NSColor {
-        switch self {
-        case .light: return NSColor(calibratedWhite: 0.42, alpha: 1)
-        case .dark: return NSColor(calibratedWhite: 0.67, alpha: 1)
-        case .cyan: return NSColor(calibratedRed: 0.55, green: 0.75, blue: 0.80, alpha: 1)
-        case .midnight: return NSColor(calibratedRed: 0.58, green: 0.63, blue: 0.78, alpha: 1)
-        }
-    }
-    var delete: NSColor {
-        switch self {
-        case .light: return NSColor(calibratedWhite: 0.35, alpha: 1)
-        case .dark: return NSColor(calibratedWhite: 0.86, alpha: 1)
-        case .cyan: return NSColor(calibratedRed: 0.70, green: 0.95, blue: 1.0, alpha: 1)
-        case .midnight: return NSColor(calibratedRed: 0.78, green: 0.84, blue: 1.0, alpha: 1)
-        }
+extension SkinColor {
+    var nsColor: NSColor {
+        NSColor(calibratedRed: CGFloat(red), green: CGFloat(green), blue: CGFloat(blue), alpha: CGFloat(alpha))
     }
 }
+
+extension SkinTheme {
+    var rowFont: NSFont {
+        let size = font.size.map { CGFloat($0) } ?? 12
+        if let name = font.name, let font = NSFont(name: name, size: size) { return font }
+        return NSFont.systemFont(ofSize: size)
+    }
+}
+
+private let skinLibrary = SkinLibrary(skinsDirectory: SkinLibrary.applicationSkinsDirectory())
 
 private enum Config {
     static let capacityKey = "copy4paste.capacity"
@@ -65,18 +28,34 @@ private enum Config {
     static let maximum = 30
     static let minOpacity = 20
     static let maxOpacity = 100
+
+    // Cached so drawing code never re-reads the skins directory.
+    private static var currentSkin: SkinTheme = skinLibrary.resolve(id: selectedSkinID)
+
+    static var skin: SkinTheme { currentSkin }
+    static var skins: [SkinTheme] { skinLibrary.allSkins() }
+
+    static var selectedSkinID: String {
+        if let value = UserDefaults.standard.object(forKey: skinKey) {
+            if let string = value as? String { return string }
+            if let number = value as? NSNumber { return SkinLibrary.legacyID(rawValue: number.intValue) }
+        }
+        return SkinTheme.defaultID
+    }
+    static func setSkinID(_ id: String) {
+        UserDefaults.standard.set(id, forKey: skinKey)
+        currentSkin = skinLibrary.resolve(id: id)
+    }
+    static func reloadSkin() {
+        currentSkin = skinLibrary.resolve(id: selectedSkinID)
+    }
+
     static var capacity: Int {
         let raw = UserDefaults.standard.object(forKey: capacityKey) as? Int ?? 4
         return min(max(raw, minimum), maximum)
     }
     static func setCapacity(_ n: Int) {
         UserDefaults.standard.set(min(max(n, minimum), maximum), forKey: capacityKey)
-    }
-    static var skin: Skin {
-        Skin(rawValue: UserDefaults.standard.integer(forKey: skinKey)) ?? .dark
-    }
-    static func setSkin(_ skin: Skin) {
-        UserDefaults.standard.set(skin.rawValue, forKey: skinKey)
     }
     static var opacity: Int {
         let raw = UserDefaults.standard.object(forKey: opacityKey) as? Int ?? 94
@@ -105,7 +84,7 @@ private final class DeleteControl: NSView {
         cross.line(to: NSPoint(x: x + 4.3, y: y + 4.3))
         cross.move(to: NSPoint(x: x - 4.3, y: y + 4.3))
         cross.line(to: NSPoint(x: x + 4.3, y: y - 4.3))
-        Config.skin.delete.setStroke()
+        Config.skin.delete.nsColor.setStroke()
         cross.stroke()
     }
     override func mouseDown(with event: NSEvent) { onDelete?() }
@@ -126,15 +105,15 @@ private final class ClipboardRow: FlippedView {
         let theme = Config.skin
         let number = NSTextField(labelWithString: "\(index + 1)")
         number.font = NSFont.monospacedDigitSystemFont(ofSize: 11, weight: index == 0 ? .semibold : .regular)
-        number.textColor = theme.muted
+        number.textColor = theme.muted.nsColor
         number.frame = NSRect(x: 9, y: 7, width: 18, height: 18)
         addSubview(number)
         let preview = text.replacingOccurrences(of: "\n", with: " ↵ ")
                           .replacingOccurrences(of: "\r", with: " ")
                           .replacingOccurrences(of: "\t", with: " ⇥ ")
         let field = NSTextField(labelWithString: preview)
-        field.font = NSFont.systemFont(ofSize: 12)
-        field.textColor = theme.foreground
+        field.font = theme.rowFont
+        field.textColor = theme.foreground.nsColor
         field.lineBreakMode = .byTruncatingTail
         field.maximumNumberOfLines = 1
         field.frame = NSRect(x: 29, y: 6, width: width - 67, height: 20)
@@ -172,7 +151,7 @@ private final class ClipboardRow: FlippedView {
     override func draw(_ dirtyRect: NSRect) {
         super.draw(dirtyRect)
         if isSelected {
-            Config.skin.selection.setFill()
+            Config.skin.selection.nsColor.setFill()
             NSBezierPath(roundedRect: bounds.insetBy(dx: 1, dy: 1), xRadius: 5, yRadius: 5).fill()
         }
     }
@@ -284,8 +263,8 @@ private final class Copy4PasteApp: NSObject, NSApplicationDelegate, NSTextFieldD
         if CommandLine.arguments.contains("--verify-settings") {
             NSApp.setActivationPolicy(.accessory)
             let skin = Config.skin
-            let bg = skin.background.withAlphaComponent(CGFloat(Config.opacity) / 100.0)
-            let log = "skin=\(skin.rawValue) opacity=\(Config.opacity) bg=\(bg) fg=\(skin.foreground)\n"
+            let bg = skin.background.nsColor.withAlphaComponent(CGFloat(Config.opacity) / 100.0)
+            let log = "skin=\(skin.id) name=\(skin.name) opacity=\(Config.opacity) bg=\(bg) fg=\(skin.foreground.nsColor)\n"
             try? log.write(toFile: "/tmp/c4p-settings-config.log", atomically: true, encoding: .utf8)
             openSettings()
             DispatchQueue.main.asyncAfter(deadline: .now() + 12) { NSApp.terminate(nil) }
@@ -444,7 +423,7 @@ private final class Copy4PasteApp: NSObject, NSApplicationDelegate, NSTextFieldD
     private func baseView(height: CGFloat) -> FlippedView {
         let view = FlippedView(frame: NSRect(x: 0, y: 0, width: width, height: height))
         view.wantsLayer = true
-        view.layer?.cornerRadius = 9
+        view.layer?.cornerRadius = CGFloat(Config.skin.cornerRadius)
         view.layer?.masksToBounds = true
         applyBackground(to: view)
         return view
@@ -452,7 +431,7 @@ private final class Copy4PasteApp: NSObject, NSApplicationDelegate, NSTextFieldD
 
     private func applyBackground(to view: NSView) {
         let alpha = CGFloat(Config.opacity) / 100.0
-        view.layer?.backgroundColor = Config.skin.background.withAlphaComponent(alpha).cgColor
+        view.layer?.backgroundColor = Config.skin.background.nsColor.withAlphaComponent(alpha).cgColor
     }
 
     private func present(_ panel: PopupPanel, height: CGFloat) {
@@ -495,14 +474,14 @@ private final class Copy4PasteApp: NSObject, NSApplicationDelegate, NSTextFieldD
             rows.append(row)
         }
         let hint = NSTextField(labelWithString: displayed.count > 4 ? "\(firstRow+1)–\(firstRow+visible)/\(displayed.count)" : "1 = latest")
-        hint.textColor = Config.skin.muted
+        hint.textColor = Config.skin.muted.nsColor
         hint.font = NSFont.systemFont(ofSize: 9)
         hint.alignment = .right
         hint.frame = NSRect(x: width - 136, y: 6, width: 92, height: 14)
         root.addSubview(hint)
         let header = NSTextField(labelWithString: "copy4paste")
         header.font = NSFont.systemFont(ofSize: 10, weight: .medium)
-        header.textColor = Config.skin.muted
+        header.textColor = Config.skin.muted.nsColor
         header.frame = NSRect(x: 10, y: 6, width: 120, height: 14)
         root.addSubview(header)
         let gear = NSButton(frame: NSRect(x: width - 36, y: 3, width: 26, height: 20))
@@ -512,7 +491,7 @@ private final class Copy4PasteApp: NSObject, NSApplicationDelegate, NSTextFieldD
         gear.toolTip = "Settings (⌃⌥⌘P)"
         gear.attributedTitle = NSAttributedString(string: "⚙", attributes: [
             .font: NSFont.systemFont(ofSize: 13),
-            .foregroundColor: Config.skin.muted
+            .foregroundColor: Config.skin.muted.nsColor
         ])
         root.addSubview(gear)
         panel.contentView = root
@@ -602,7 +581,7 @@ private final class Copy4PasteApp: NSObject, NSApplicationDelegate, NSTextFieldD
         button.action = action
         button.attributedTitle = NSAttributedString(string: title, attributes: [
             .font: NSFont.systemFont(ofSize: size, weight: .medium),
-            .foregroundColor: Config.skin.muted
+            .foregroundColor: Config.skin.muted.nsColor
         ])
         return button
     }
@@ -613,60 +592,67 @@ private final class Copy4PasteApp: NSObject, NSApplicationDelegate, NSTextFieldD
         if popup?.isVisible == true { hide() }
         showingSettings = true
         target = preserveTarget ? oldTarget : NSWorkspace.shared.frontmostApplication
-        let height: CGFloat = 218
+        let height: CGFloat = 240
         let panel = makePopup(height: height)
         panel.isSettings = true
         let root = baseView(height: height)
         let theme = Config.skin
 
-        let title = NSTextField(labelWithString: "copy4paste · Settings · 1.1")
+        let title = NSTextField(labelWithString: "copy4paste · Settings · 1.2")
         title.font = NSFont.systemFont(ofSize: 12, weight: .semibold)
-        title.textColor = theme.foreground
+        title.textColor = theme.foreground.nsColor
         title.frame = NSRect(x: 14, y: 12, width: 262, height: 20)
         root.addSubview(title)
 
         let limitLabel = NSTextField(labelWithString: "Copies")
         limitLabel.font = NSFont.systemFont(ofSize: 12)
-        limitLabel.textColor = theme.foreground
-        limitLabel.frame = NSRect(x: 14, y: 52, width: 100, height: 20)
+        limitLabel.textColor = theme.foreground.nsColor
+        limitLabel.frame = NSRect(x: 14, y: 46, width: 100, height: 20)
         root.addSubview(limitLabel)
         let limitValue = NSTextField(labelWithString: "\(clipboard.capacity)")
         limitValue.identifier = NSUserInterfaceItemIdentifier("capacityLabel")
         limitValue.font = NSFont.monospacedDigitSystemFont(ofSize: 13, weight: .medium)
-        limitValue.textColor = theme.foreground
+        limitValue.textColor = theme.foreground.nsColor
         limitValue.alignment = .right
-        limitValue.frame = NSRect(x: 150, y: 52, width: 34, height: 20)
+        limitValue.frame = NSRect(x: 150, y: 46, width: 34, height: 20)
         root.addSubview(limitValue)
-        let stepper = NSStepper(frame: NSRect(x: 196, y: 50, width: 52, height: 24))
+        let stepper = NSStepper(frame: NSRect(x: 196, y: 44, width: 52, height: 24))
         stepper.minValue = Double(Config.minimum)
         stepper.maxValue = Double(Config.maximum)
         stepper.integerValue = clipboard.capacity
         stepper.target = self
         stepper.action = #selector(capacityChanged(_:))
-        stepper.appearance = NSAppearance(named: theme == .light ? .aqua : .darkAqua)
+        stepper.appearance = NSAppearance(named: theme.isLight ? .aqua : .darkAqua)
         root.addSubview(stepper)
 
+        let skins = Config.skins
         let skinLabel = NSTextField(labelWithString: "Skin")
         skinLabel.font = NSFont.systemFont(ofSize: 12)
-        skinLabel.textColor = theme.foreground
-        skinLabel.frame = NSRect(x: 14, y: 92, width: 80, height: 20)
+        skinLabel.textColor = theme.foreground.nsColor
+        skinLabel.frame = NSRect(x: 14, y: 82, width: 80, height: 20)
         root.addSubview(skinLabel)
-        let skinPopup = NSPopUpButton(frame: NSRect(x: 100, y: 90, width: 176, height: 24), pullsDown: false)
-        skinPopup.addItems(withTitles: Skin.allCases.map { $0.title })
-        skinPopup.selectItem(at: Config.skin.rawValue)
+        let skinPopup = NSPopUpButton(frame: NSRect(x: 100, y: 80, width: 176, height: 24), pullsDown: false)
+        skinPopup.addItems(withTitles: skins.map { $0.name })
+        if let current = skins.firstIndex(where: { $0.id == Config.skin.id }) {
+            skinPopup.selectItem(at: current)
+        }
         skinPopup.target = self
         skinPopup.action = #selector(skinChanged(_:))
         skinPopup.controlSize = .small
         skinPopup.font = NSFont.systemFont(ofSize: 11)
-        skinPopup.appearance = NSAppearance(named: theme == .light ? .aqua : .darkAqua)
+        skinPopup.appearance = NSAppearance(named: theme.isLight ? .aqua : .darkAqua)
         root.addSubview(skinPopup)
+
+        let importButton = footerButton("Import JSON skin…", frame: NSRect(x: 100, y: 112, width: 176, height: 20),
+                                       action: #selector(importSkinAction(_:)))
+        root.addSubview(importButton)
 
         let opacityLabel = NSTextField(labelWithString: "Opacity")
         opacityLabel.font = NSFont.systemFont(ofSize: 12)
-        opacityLabel.textColor = theme.foreground
-        opacityLabel.frame = NSRect(x: 14, y: 132, width: 100, height: 20)
+        opacityLabel.textColor = theme.foreground.nsColor
+        opacityLabel.frame = NSRect(x: 14, y: 146, width: 100, height: 20)
         root.addSubview(opacityLabel)
-        let opacityField = NSTextField(frame: NSRect(x: 150, y: 131, width: 50, height: 22))
+        let opacityField = NSTextField(frame: NSRect(x: 150, y: 145, width: 50, height: 22))
         opacityField.identifier = NSUserInterfaceItemIdentifier("opacityField")
         opacityField.stringValue = "\(Config.opacity)"
         opacityField.font = NSFont.monospacedDigitSystemFont(ofSize: 12, weight: .medium)
@@ -677,18 +663,18 @@ private final class Copy4PasteApp: NSObject, NSApplicationDelegate, NSTextFieldD
         opacityField.target = self
         opacityField.action = #selector(opacityChanged(_:))
         opacityField.delegate = self
-        opacityField.appearance = NSAppearance(named: theme == .light ? .aqua : .darkAqua)
+        opacityField.appearance = NSAppearance(named: theme.isLight ? .aqua : .darkAqua)
         root.addSubview(opacityField)
         let percent = NSTextField(labelWithString: "%")
         percent.font = NSFont.systemFont(ofSize: 12)
-        percent.textColor = theme.muted
-        percent.frame = NSRect(x: 203, y: 132, width: 20, height: 20)
+        percent.textColor = theme.muted.nsColor
+        percent.frame = NSRect(x: 203, y: 146, width: 20, height: 20)
         root.addSubview(percent)
 
-        let help = NSTextField(labelWithString: "4 copies by default · 1–30 · history lives in RAM only")
+        let help = NSTextField(labelWithString: "1–30 copies · RAM only · skin files live in Application Support")
         help.font = NSFont.systemFont(ofSize: 9)
-        help.textColor = theme.muted
-        help.frame = NSRect(x: 14, y: 166, width: 262, height: 16)
+        help.textColor = theme.muted.nsColor
+        help.frame = NSRect(x: 14, y: 178, width: 262, height: 16)
         root.addSubview(help)
 
         let quit = footerButton("Quit", frame: NSRect(x: width - 176, y: height - 32, width: 76, height: 22),
@@ -720,8 +706,41 @@ private final class Copy4PasteApp: NSObject, NSApplicationDelegate, NSTextFieldD
     }
 
     @objc private func skinChanged(_ sender: NSPopUpButton) {
-        Config.setSkin(Skin(rawValue: sender.indexOfSelectedItem) ?? .dark)
+        let skins = Config.skins
+        let index = sender.indexOfSelectedItem
+        guard skins.indices.contains(index) else { return }
+        Config.setSkinID(skins[index].id)
         openSettings(preserveFrame: true, preserveTarget: true)
+    }
+
+    @objc private func importSkinAction(_ sender: Any?) {
+        let panel = NSOpenPanel()
+        panel.allowedFileTypes = ["json"]
+        panel.allowsMultipleSelection = false
+        panel.canChooseDirectories = false
+        panel.canCreateDirectories = false
+        panel.message = "Choose a copy4paste skin (.json)"
+        panel.prompt = "Import"
+        NSApp.activate(ignoringOtherApps: true)
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+        do {
+            let theme = try skinLibrary.importSkin(from: url)
+            Config.setSkinID(theme.id)
+            openSettings(preserveFrame: true, preserveTarget: true)
+        } catch let error as SkinError {
+            showImportError(error.description)
+        } catch {
+            showImportError("The selected file could not be imported.")
+        }
+    }
+
+    private func showImportError(_ message: String) {
+        let alert = NSAlert()
+        alert.messageText = "Could not import skin"
+        alert.informativeText = message
+        alert.alertStyle = .warning
+        alert.addButton(withTitle: "OK")
+        alert.runModal()
     }
 
     @objc private func opacityChanged(_ sender: Any?) {
@@ -770,7 +789,7 @@ private func eventTapCallback(_ proxy: CGEventTapProxy, _ type: CGEventType,
 }
 
 if CommandLine.arguments.contains("--version") {
-    print("copy4paste 1.1 · runtime")
+    print("copy4paste 1.2 · runtime")
 } else if CommandLine.arguments.contains("--verify-ui") {
     // Smoke test run ON A MAC by GitHub Actions before the app is distributed.
     _ = NSApplication.shared

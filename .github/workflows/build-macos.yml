@@ -2,7 +2,7 @@ name: build-macos
 
 on:
   push:
-    branches: [main]
+    branches: [main, feat/community-skins]
   workflow_dispatch:
 
 permissions:
@@ -25,11 +25,11 @@ jobs:
           uname -m
           xcrun --sdk macosx --show-sdk-version
 
-      - name: History tests
+      - name: Core tests (history + skins)
         run: |
           set -euo pipefail
-          swiftc -swift-version 5 macos/Core/HistoryStore.swift macos/Tests/main.swift -o "$RUNNER_TEMP/history-test"
-          "$RUNNER_TEMP/history-test"
+          swiftc -swift-version 5 macos/Core/HistoryStore.swift macos/Core/SkinTheme.swift macos/Tests/main.swift -o "$RUNNER_TEMP/core-test"
+          "$RUNNER_TEMP/core-test"
 
       - name: Build universal (Intel 10.15 + Apple Silicon 11.0)
         shell: bash
@@ -44,7 +44,7 @@ jobs:
 
           COMMON=(-swift-version 5 -O -sdk "$SDK"
                   -framework AppKit -framework ApplicationServices -framework CoreGraphics
-                  macos/Core/HistoryStore.swift macos/Sources/main.swift)
+                  macos/Core/HistoryStore.swift macos/Core/SkinTheme.swift macos/Sources/main.swift)
 
           xcrun swiftc "${COMMON[@]}" -target x86_64-apple-macosx10.15 -o build/copy4paste-x86_64
           xcrun swiftc "${COMMON[@]}" -target arm64-apple-macosx11.0  -o build/copy4paste-arm64

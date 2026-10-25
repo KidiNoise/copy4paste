@@ -1,0 +1,13 @@
+{
+  "name": "Ocean",
+  "author": "copy4paste community",
+  "colors": {
+    "background": "#0B2545",
+    "selection": "#2E7BD6E6",
+    "foreground": "#EAF4FF",
+    "muted": "#8FB6E0",
+    "delete": "#C9E2FF"
+  },
+  "appearance": "dark",
+  "cornerRadius": 6
+}
