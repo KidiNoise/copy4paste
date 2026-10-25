@@ -88,6 +88,13 @@ community skins: download the file and import it.
 
 ### Make your own — and share it
 
+**Your palette belongs here.** Ocean and Sunset started as two files someone edited in a text
+editor; a skin you design can join the gallery above, credited to you.
+
+1. Copy [`template.json`](skins/template.json), rename it, change the five colours.
+2. Import it with **Import JSON skin…** and check it with `⌘V`.
+3. Add the file to [`skins/examples/`](skins/examples/) and open a Pull Request named after your skin.
+
 - [Template](skins/template.json) — copy it, rename it, change the five colours.
 - [Beginner guide](skins/README.md) — the format, every field, and how to test it. No programming
   needed: the file is plain text.

@@ -36,10 +36,9 @@
 .skins-body{margin:0;line-height:22px}
 .skins-inline-link{color:inherit;text-decoration:underline;text-underline-offset:2px}
 .skins-inline-link:hover{color:rgb(27,27,29)}
-.skins-help{margin-top:24px;background-color:rgba(246,243,245,.7);border-radius:16px;padding:24px;
-  display:flex;flex-direction:column;gap:18px}
-.skins-safe{max-width:560px;margin:0;line-height:22px}
-.skins-actions{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+
+
+
 .skins-btn{display:inline-flex;align-items:center;gap:8px;padding:12px 20px;border-radius:9999px;
   font-family:Inter;font-size:13px;line-height:16px;font-weight:500;text-decoration:none;
   background-color:rgb(240,237,239);color:rgb(27,27,29);transition:background-color .15s ease}
@@ -48,3 +47,29 @@
 .skins-btn-primary:hover{background-color:rgb(0,101,204)}
 .skins-btn-icon{font-size:18px}
 @media (prefers-reduced-motion:reduce){.skins-item:hover .skins-shot{transform:none}}
+
+/* Invitation band inside #skins */
+.skins-invite{margin-top:56px;background:#0B2545;border-radius:20px;padding:32px;
+  display:flex;flex-direction:column;gap:28px}
+@media (min-width:900px){.skins-invite{flex-direction:row;align-items:center;justify-content:space-between;
+  padding:40px 44px;gap:40px}}
+.skins-invite-copy{max-width:600px}
+.skins-invite-tag{display:block;font-family:Inter;font-size:10px;line-height:1;letter-spacing:.11em;
+  text-transform:uppercase;font-weight:600;color:#8FB6E0;margin-bottom:12px}
+.skins-invite-title{font-family:Inter;font-size:26px;line-height:32px;letter-spacing:-.02em;font-weight:600;
+  color:#EAF4FF;margin:0 0 12px}
+@media (min-width:768px){.skins-invite-title{font-size:32px;line-height:38px}}
+.skins-invite-text{font-family:Inter;font-size:15px;line-height:23px;color:#C9DAF2;margin:0 0 20px}
+.skins-steps{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:10px 22px}
+.skins-steps li{display:flex;align-items:center;gap:8px;font-family:Inter;font-size:13px;line-height:18px;
+  font-weight:500;color:#EAF4FF}
+.skins-step-num{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;
+  border-radius:9999px;background:rgba(143,182,224,.22);color:#EAF4FF;font-size:11px;font-weight:600;
+  flex:0 0 auto}
+.skins-steps code{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:12px;
+  background:rgba(234,244,255,.12);padding:2px 6px;border-radius:4px}
+.skins-invite-actions{display:flex;flex-wrap:wrap;gap:10px}
+.skins-btn-ghost{background:rgba(234,244,255,.10);color:#EAF4FF}
+.skins-btn-ghost:hover{background:rgba(234,244,255,.18)}
+.skins-safe-note{margin-top:22px;max-width:760px;font-family:Inter;font-size:13px;line-height:20px;
+  color:rgb(113,119,133)}
