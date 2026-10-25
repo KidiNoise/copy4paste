@@ -2,7 +2,7 @@ name: build-macos
 
 on:
   push:
-    branches: [main, feat/community-skins]
+    branches: [main]
   workflow_dispatch:
 
 permissions:
