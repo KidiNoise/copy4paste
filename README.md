@@ -22,6 +22,15 @@
 
 ---
 
+<!-- C4P GIF PREVIEW START -->
+<p align="center">
+  <a href="https://kidinoise.github.io/copy4paste/">
+    <img src="docs/assets/copy4paste-preview.gif" alt="Video preview of Copy4Paste selecting previous clipboard items" width="760">
+  </a>
+</p>
+<p align="center"><a href="https://kidinoise.github.io/copy4paste/">Watch the full 21-second demo and download Copy4Paste</a></p>
+<!-- C4P GIF PREVIEW END -->
+
 Copy several pieces of text and pick which one to paste with a single key. Press `⌘V` and a small
 floating picker appears with your latest copies; hit `1`, `2`, `3`… and keep working. Native macOS,
 no Electron, no network, no history on disk.
