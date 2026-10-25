@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/KidiNoise/copy4paste/releases/latest"><img alt="Version" src="https://img.shields.io/badge/version-1.1-0071e3"></a>
+  <a href="https://github.com/KidiNoise/copy4paste/releases/latest"><img alt="Version" src="https://img.shields.io/badge/version-1.2-0071e3"></a>
   <img alt="macOS" src="https://img.shields.io/badge/macOS-10.15%2B%20Intel%20%C2%B7%2011%2B%20Apple%20Silicon-1b1b1d">
   <img alt="License" src="https://img.shields.io/badge/license-MIT-006a26">
   <img alt="No dependencies" src="https://img.shields.io/badge/dependencies-none-717785">
@@ -76,16 +76,20 @@ with no code changes. See [NOTARIZATION.md](NOTARIZATION.md).
   - `1`–`9` pastes that copy · `↑`/`↓` + `Enter` navigates · `Backspace` deletes without pasting ·
     `Esc` cancels.
   - The `×` on the right of each row deletes that entry with the mouse.
-- `⚙` (or `⌃⌥⌘P`) opens Settings: number of copies, **skin** (Dark, Light, Cyan, Midnight),
-  **opacity** and quit.
+- `⚙` (or `⌃⌥⌘P`) opens Settings: number of copies, **skin** (Dark, Light, Cyan,
+  Midnight or any imported community skin), **opacity** and quit.
+- **Community skins**: download a `.json` skin, import it from Settings and it applies
+  instantly. See [skins/](skins/README.md).
 - With a single copy, or when the clipboard holds files or images, `⌘V` behaves as usual.
 - No Dock icon, no window at launch, no history on disk.
 
 ## Privacy
 
 The history lives **in RAM** and disappears when the app quits. Only preferences are stored (number of
-copies, skin, opacity). No network, no telemetry, no accounts, no cloud. It is worth quitting it while
-handling passwords: some apps do not flag sensitive data on the clipboard properly.
+copies, skin, opacity). Imported skins are plain JSON files copied to
+`~/Library/Application Support/copy4paste/skins/`; they contain no code. No network, no telemetry, no
+accounts, no cloud. It is worth quitting it while handling passwords: some apps do not flag sensitive
+data on the clipboard properly.
 
 ## Downloads
 
@@ -100,8 +104,8 @@ handling passwords: some apps do not flag sensitive data on the clipboard proper
 Requires Xcode Command Line Tools on macOS.
 
 ```bash
-swiftc -swift-version 5 macos/Core/HistoryStore.swift macos/Tests/main.swift -o /tmp/copy4paste-history-test
-/tmp/copy4paste-history-test
+swiftc -swift-version 5 macos/Core/HistoryStore.swift macos/Core/SkinTheme.swift macos/Tests/main.swift -o /tmp/copy4paste-core-test
+/tmp/copy4paste-core-test
 ```
 
 The app and the DMG are built by GitHub Actions on a macOS runner
@@ -114,6 +118,7 @@ mounted DMG. Pushing a `v*` tag makes `release-macos.yml` publish the Release wi
 
 ```
 macos/     AppKit app (Sources, Core, Tests, Info.plist, icon)
+skins/     community skins: template, examples and guide
 docs/      project website
 .github/   macOS build and release workflows
 ```

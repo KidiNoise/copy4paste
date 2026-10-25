@@ -1,0 +1,17 @@
+{
+  "name": "My Skin",
+  "author": "Your name",
+  "colors": {
+    "background": "#222222",
+    "selection": "#FFFFFF33",
+    "foreground": "#F5F5F5",
+    "muted": "#9A9A9A",
+    "delete": "#E0E0E0"
+  },
+  "appearance": "dark",
+  "cornerRadius": 9,
+  "font": {
+    "name": "Menlo",
+    "size": 12
+  }
+}
