@@ -9,6 +9,14 @@ and never changes what you copy, paste or store.
 > **Midnight** — which cannot be removed. Everything you import lives alongside
 > them in `~/Library/Application Support/copy4paste/skins/`.
 
+See all six previews — the four built-ins plus the two examples in this folder — on the
+[project website](https://kidinoise.github.io/copy4paste/#skins) or in the
+[README gallery](../README.md#community-skins).
+
+Two ready-made examples live here: [`examples/ocean.json`](examples/ocean.json) and
+[`examples/sunset.json`](examples/sunset.json). copy4paste has **no skin store**: it never
+downloads anything. You save the file yourself, then import it.
+
 ## Make your first skin (no programming)
 
 1. Copy [`template.json`](template.json) and rename the copy, for example
@@ -16,6 +24,11 @@ and never changes what you copy, paste or store.
 2. Open it in any text editor (TextEdit works) and change the values.
 3. Save it and import it: open copy4paste → `⚙` → **Import JSON skin…** → pick
    your file. It applies immediately.
+4. Test it the way it is used: copy two or three different pieces of text, press
+   `⌘V` and look at the panel — the background, the highlight on the row under the
+   cursor, the copied text, the small hints and the `×`. If something looks wrong,
+   change the value, save and import it again; the same file name replaces the
+   previous version.
 
 The file name (without `.json`) becomes the skin's id. Two skins with the same
 file name are the same skin: importing one replaces the other.

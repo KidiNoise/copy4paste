@@ -39,6 +39,66 @@ no Electron, no network, no history on disk.
 > are in development; they will ship as separate downloads and will not change anything that already
 > works on Mac.
 
+## Community skins
+
+Copy4Paste ships with **four built-in skins** and imports any skin you download as a small `.json`
+file. Same picker, your colours:
+
+<table>
+<tr>
+    <td align="center" width="33%">
+      <img src="docs/assets/skins/dark.png" width="340" alt="The copy4paste picker in the Dark skin: four clipboard rows, the first one highlighted, on a charcoal panel.">
+      <br><strong>Dark</strong> · <sub>Built-in</sub>
+    </td>
+    <td align="center" width="33%">
+      <img src="docs/assets/skins/light.png" width="340" alt="The copy4paste picker in the Light skin: four clipboard rows, the first one highlighted, on an off-white panel.">
+      <br><strong>Light</strong> · <sub>Built-in</sub>
+    </td>
+    <td align="center" width="33%">
+      <img src="docs/assets/skins/cyan.png" width="340" alt="The copy4paste picker in the Cyan skin: four clipboard rows, the first one highlighted in teal, on a deep teal panel.">
+      <br><strong>Cyan</strong> · <sub>Built-in</sub>
+    </td>
+</tr>
+<tr>
+    <td align="center" width="33%">
+      <img src="docs/assets/skins/midnight.png" width="340" alt="The copy4paste picker in the Midnight skin: four clipboard rows, the first one highlighted in navy, on a near-black blue panel.">
+      <br><strong>Midnight</strong> · <sub>Built-in</sub>
+    </td>
+    <td align="center" width="33%">
+      <img src="docs/assets/skins/ocean.png" width="340" alt="The copy4paste picker in the Ocean community skin: four clipboard rows, the first one highlighted in blue, on a dark navy panel.">
+      <br><strong>Ocean</strong> · <sub>JSON example</sub>
+    </td>
+    <td align="center" width="33%">
+      <img src="docs/assets/skins/sunset.png" width="340" alt="The copy4paste picker in the Sunset community skin: four clipboard rows, the first one highlighted in burnt orange, on a warm plum panel.">
+      <br><strong>Sunset</strong> · <sub>JSON example</sub>
+    </td>
+</tr>
+</table>
+
+**Built-in** — Dark, Light, Cyan and Midnight are always available and cannot be removed.
+**JSON examples** — [Ocean](skins/examples/ocean.json) and [Sunset](skins/examples/sunset.json) are
+community skins: download the file and import it.
+
+### Use a skin
+
+- **Built-in:** press `⌘V`, click the gear, choose **Skin**, pick one. The panel changes as you pick.
+- **Downloaded:** open [Ocean](skins/examples/ocean.json) or [Sunset](skins/examples/sunset.json),
+  press **Download raw file**, then gear → **Import JSON skin…** and choose it. It applies immediately
+  and stays in your list.
+
+### Make your own — and share it
+
+- [Template](skins/template.json) — copy it, rename it, change the five colours.
+- [Beginner guide](skins/README.md) — the format, every field, and how to test it. No programming
+  needed: the file is plain text.
+- [Send it as a Pull Request](skins/README.md#share-your-skin-pull-request) — add your file to
+  `skins/examples/` and open a PR with the name of your skin.
+
+> A skin is **data only**: five colours, a corner radius and an optional font. Nothing in the file is
+> executed, nothing is uploaded, and the app makes no network requests. There is no in-app store —
+> you download the JSON yourself and import it. The previews above are drawn from the palette and
+> geometry in the app source; they are illustrations, not screenshots.
+
 ## Installation
 
 1. Download the **DMG** and open it.
