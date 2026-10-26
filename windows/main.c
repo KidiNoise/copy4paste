@@ -282,7 +282,15 @@ static void set_clipboard_text(const char *text) {
 
 static char *clipboard_text(void) {
     if (!IsClipboardFormatAvailable(CF_UNICODETEXT)) return NULL;
-    if (!OpenClipboard(NULL)) return NULL;
+    /* Another process may hold the clipboard open at the exact moment a copy
+     * happens; retrying briefly is the difference between keeping that copy
+     * and silently losing it. */
+    int attempt;
+    for (attempt = 0; attempt < 6; attempt++) {
+        if (OpenClipboard(NULL)) break;
+        Sleep(15);
+    }
+    if (attempt == 6) return NULL;
     HANDLE handle = GetClipboardData(CF_UNICODETEXT);
     char *text = NULL;
     if (handle) {

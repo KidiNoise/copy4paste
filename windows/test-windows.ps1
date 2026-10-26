@@ -113,6 +113,20 @@ function Wait-Window($title, $seconds) {
     return $false
 }
 
+function Wait-Entries($statusFile, $wanted, $seconds) {
+    $deadline = (Get-Date).AddSeconds($seconds)
+    $count = 0
+    while ((Get-Date) -lt $deadline) {
+        if (Test-Path $statusFile) {
+            $text = Get-Content $statusFile -Raw
+            if ($text -match "ENTRIES=(\d+)") { $count = [int]$Matches[1] }
+        }
+        if ($count -ge $wanted) { return $count }
+        Start-Sleep -Milliseconds 150
+    }
+    return $count
+}
+
 function Stop-All {
     Get-Process -Name "copy4paste" -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
     Get-Process -Name "paste_target" -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
@@ -179,28 +193,15 @@ try {
         Write-Host "6-8. SKIPPED: paste_target.exe not built (pass -PasteTarget)"
     } else {
         Write-Host "6. the paste really lands in another application's window"
-        Set-Clipboard -Value "first copy"
-        Start-Sleep -Milliseconds 600
-        Set-Clipboard -Value "second copy"
-        Start-Sleep -Milliseconds 600
         $daemonStatus = Join-Path $work "daemon.log"
         $daemon = Start-Process -FilePath $exe -ArgumentList @("--test-accept-injected", "--status-file", $daemonStatus) -PassThru
         Start-Sleep -Seconds 2
-        $target = Start-Process -FilePath $targetExe -ArgumentList @($targetLog, "25") -PassThru
-        if (-not $target) { Fail "the paste target did not start" }
-        Start-Sleep -Seconds 2
-        # Wait until the instance has actually collected both copies: the
-        # clipboard is polled, so a fixed sleep is not evidence.
-        $deadline = (Get-Date).AddSeconds(10)
-        $entries = 0
-        while ((Get-Date) -lt $deadline) {
-            if (Test-Path $daemonStatus) {
-                $text = Get-Content $daemonStatus -Raw
-                if ($text -match "ENTRIES=(\d+)") { $entries = [int]$Matches[1] }
-            }
-            if ($entries -ge 2) { break }
-            Start-Sleep -Milliseconds 150
+        Set-Clipboard -Value "first copy"
+        if ((Wait-Entries $daemonStatus 1 10) -lt 1) {
+            Fail "the instance never saw the first copy: *** $((Get-Content $daemonStatus -Raw) -replace "`r`n", "; ")"
         }
+        Set-Clipboard -Value "second copy"
+        $entries = Wait-Entries $daemonStatus 2 10
         $state = if (Test-Path $daemonStatus) { (Get-Content $daemonStatus -Raw) -replace "`r`n", "; " } else { "<no status>" }
         if ($entries -lt 2) { Fail "the instance collected $entries copies: *** $state" }
         [C4P]::CtrlV()
@@ -223,12 +224,17 @@ try {
         Stop-All
 
         Write-Host "7. a second --select does not start a second instance"
-        $daemon = Start-Process -FilePath $exe -ArgumentList @("--test-accept-injected") -PassThru
+        $status7 = Join-Path $work "daemon7.log"
+        $daemon = Start-Process -FilePath $exe -ArgumentList @("--test-accept-injected", "--status-file", $status7) -PassThru
         Start-Sleep -Seconds 2
         Set-Clipboard -Value "alpha"
-        Start-Sleep -Milliseconds 600
+        if ((Wait-Entries $status7 1 10) -lt 1) {
+            Fail "the instance never saw the first copy: *** $((Get-Content $status7 -Raw) -replace "`r`n", "; ")"
+        }
         Set-Clipboard -Value "beta"
-        Start-Sleep -Milliseconds 800
+        if ((Wait-Entries $status7 2 10) -lt 2) {
+            Fail "the instance never saw the second copy: *** $((Get-Content $status7 -Raw) -replace "`r`n", "; ")"
+        }
         $before = @(Get-Process -Name "copy4paste" -ErrorAction SilentlyContinue).Count
         Run @("--select") | Out-Null
         Start-Sleep -Milliseconds 800
@@ -248,11 +254,13 @@ try {
     $statusText = Get-Content $status -Raw
     if ($statusText -notmatch "HOOK=unavailable") { Fail "the status does not report the missing hook: $statusText" }
     Set-Clipboard -Value "alpha"
-    Start-Sleep -Milliseconds 600
+    [void](Wait-Entries $status 1 10)
     Set-Clipboard -Value "beta"
-    Start-Sleep -Milliseconds 800
+    [void](Wait-Entries $status 2 10)
     Run @("--select") | Out-Null
-    if (-not (Wait-Window "copy4paste" 5)) { Fail "the picker does not open at all without the hook" }
+    if (-not (Wait-Window "copy4paste" 5)) {
+        Fail "the picker does not open at all without the hook: *** $((Get-Content $status -Raw) -replace "`r`n", "; ")"
+    }
     [C4P]::Key(0x1B)
     Stop-All
 
