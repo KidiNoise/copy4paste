@@ -34,7 +34,7 @@
 <div class="inline-flex items-center gap-space-xs px-3.5 py-1.5 rounded-full bg-surface-container-high/80 backdrop-blur-md shadow-[0_1px_2px_rgba(0,0,0,0.04)] mb-8 transition-transform hover:scale-[1.01]">
 <span class="w-1.5 h-1.5 rounded-full bg-tertiary-container animate-pulse"></span>
 <span class="font-label-sm text-label-sm text-on-surface-variant font-medium tracking-tight">
-          v1.2 · macOS 10.15+ (Intel) · macOS 11+ (Apple Silicon) · MIT
+          v1.3 · macOS · Windows · Linux · MIT
         </span>
 </div>
 <!-- C4P BRAND IMAGE START -->
@@ -45,7 +45,7 @@
         Copy. Choose. Paste.
       </h1>
 <p class="font-body-lg text-body-lg text-on-surface-variant max-w-[620px] mx-auto mb-10 leading-relaxed font-normal">
-        Your latest copied texts, always a single <kbd class="px-2 py-0.5 rounded-md bg-surface-container-lowest font-kbd-shortcut text-kbd-shortcut text-on-surface shadow-[0_1px_1px_rgba(0,0,0,0.12)]">⌘V</kbd> away.
+        Your latest copied texts, always a single <kbd class="px-2 py-0.5 rounded-md bg-surface-container-lowest font-kbd-shortcut text-kbd-shortcut text-on-surface shadow-[0_1px_1px_rgba(0,0,0,0.12)]">⌘V</kbd> (or <kbd class="px-2 py-0.5 rounded-md bg-surface-container-lowest font-kbd-shortcut text-kbd-shortcut text-on-surface shadow-[0_1px_1px_rgba(0,0,0,0.12)]">Ctrl+V</kbd>) away.
       </p>
 <!-- Action Buttons -->
 <div class="flex flex-col sm:flex-row items-center justify-center gap-space-md mb-16">
@@ -61,7 +61,17 @@
 <span class="material-symbols-outlined text-[16px] text-on-surface-variant" aria-hidden="true">&#xF8CE;</span>
 </a>
 </div>
-<p class="font-label-sm text-label-sm text-on-surface-variant -mt-12 mb-14">Windows and Linux, on the way.</p>
+<div class="flex flex-col sm:flex-row items-center justify-center gap-space-sm -mt-12 mb-14">
+<a class="inline-flex items-center gap-space-xs px-6 py-3 rounded-full bg-surface-container-high/90 text-on-surface hover:bg-surface-variant transition-colors shadow-[0_1px_2px_rgba(0,0,0,0.06)]" href="https://github.com/KidiNoise/copy4paste/releases/latest/download/copy4paste-windows-x64.zip" download>
+<span class="font-label-md text-label-md font-medium">Windows .zip</span>
+</a>
+<a class="inline-flex items-center gap-space-xs px-6 py-3 rounded-full bg-surface-container-high/90 text-on-surface hover:bg-surface-variant transition-colors shadow-[0_1px_2px_rgba(0,0,0,0.06)]" href="https://github.com/KidiNoise/copy4paste/releases/latest/download/copy4paste-linux-x86_64.tar.gz" download>
+<span class="font-label-md text-label-md font-medium">Linux .tar.gz</span>
+</a>
+<a class="inline-flex items-center gap-space-xs px-6 py-3 rounded-full bg-surface-container-high/90 text-on-surface hover:bg-surface-variant transition-colors shadow-[0_1px_2px_rgba(0,0,0,0.06)]" href="https://github.com/KidiNoise/copy4paste/releases/latest/download/copy4paste_x86_64.deb" download>
+<span class="font-label-md text-label-md font-medium">.deb</span>
+</a>
+</div>
 <!-- C4P LAUNCH VIDEO START -->
 <figure style="width:min(100%,860px);margin:0 auto 50px;padding:0 4px;text-align:center;box-sizing:border-box">
   <video controls autoplay loop muted playsinline preload="metadata"
@@ -473,6 +483,52 @@
               </p>
 </div>
 </div>
+
+<h3 class="font-label-sm text-label-sm font-semibold uppercase tracking-wider text-primary mt-6">Windows 10 and 11</h3>
+<div class="p-6 rounded-2xl bg-surface-container-lowest shadow-[0_1px_3px_rgba(0,0,0,0.02)] flex items-start gap-4">
+<div class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center font-label-md text-label-md font-semibold text-on-surface shrink-0">1</div>
+<div>
+<h4 class="font-headline-sm text-headline-sm text-on-surface font-medium mb-1">Download the ZIP</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed">Unpack it anywhere: the <em>.exe</em> is the whole app, with the four skins inside.</p>
+</div>
+</div>
+<div class="p-6 rounded-2xl bg-surface-container-lowest shadow-[0_1px_3px_rgba(0,0,0,0.02)] flex items-start gap-4">
+<div class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center font-label-md text-label-md font-semibold text-on-surface shrink-0">2</div>
+<div>
+<h4 class="font-headline-sm text-headline-sm text-on-surface font-medium mb-1">Run it past SmartScreen</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed">The build is not code-signed: <em>More info &gt; Run anyway</em>, once. copy4paste then waits in the notification area.</p>
+</div>
+</div>
+<div class="p-6 rounded-2xl bg-surface-container-lowest shadow-[0_1px_3px_rgba(0,0,0,0.02)] flex items-start gap-4">
+<div class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center font-label-md text-label-md font-semibold text-on-surface shrink-0">3</div>
+<div>
+<h4 class="font-headline-sm text-headline-sm text-on-surface font-medium mb-1">Copy two texts, press Ctrl+V</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed">The picker appears at the cursor. Settings is on the tray menu or Ctrl+Alt+P.</p>
+</div>
+</div>
+
+<h3 class="font-label-sm text-label-sm font-semibold uppercase tracking-wider text-primary mt-6">Linux (x86_64, GTK 3)</h3>
+<div class="p-6 rounded-2xl bg-surface-container-lowest shadow-[0_1px_3px_rgba(0,0,0,0.02)] flex items-start gap-4">
+<div class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center font-label-md text-label-md font-semibold text-on-surface shrink-0">1</div>
+<div>
+<h4 class="font-headline-sm text-headline-sm text-on-surface font-medium mb-1">Download the tarball or the .deb</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed">GTK 3, libX11 and libXtst are the only requirements, and desktop systems already ship them.</p>
+</div>
+</div>
+<div class="p-6 rounded-2xl bg-surface-container-lowest shadow-[0_1px_3px_rgba(0,0,0,0.02)] flex items-start gap-4">
+<div class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center font-label-md text-label-md font-semibold text-on-surface shrink-0">2</div>
+<div>
+<h4 class="font-headline-sm text-headline-sm text-on-surface font-medium mb-1">Install for your user</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed">In the unpacked folder run <em>./install.sh</em> (no root), or install the .deb with your package manager.</p>
+</div>
+</div>
+<div class="p-6 rounded-2xl bg-surface-container-lowest shadow-[0_1px_3px_rgba(0,0,0,0.02)] flex items-start gap-4">
+<div class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center font-label-md text-label-md font-semibold text-on-surface shrink-0">3</div>
+<div>
+<h4 class="font-headline-sm text-headline-sm text-on-surface font-medium mb-1">On Wayland, bind one shortcut</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed">Wayland does not allow intercepting Ctrl+V: point a shortcut of your desktop at <em>copy4paste --select</em>. On X11 Ctrl+V works by itself.</p>
+</div>
+</div>
 </div>
 <!-- Gatekeeper box and tech specs -->
 <div class="lg:col-span-5 flex flex-col gap-6">
@@ -503,15 +559,15 @@
 <dl class="space-y-3 font-body-sm text-body-sm">
 <div class="flex justify-between items-center py-1">
 <dt class="text-on-surface-variant">Version</dt>
-<dd class="font-medium text-on-surface">1.2</dd>
+<dd class="font-medium text-on-surface">1.3</dd>
 </div>
 <div class="flex justify-between items-center py-1">
 <dt class="text-on-surface-variant">Architecture</dt>
-<dd class="font-medium text-on-surface">Universal binary (Apple Silicon &amp; x86_64)</dd>
+<dd class="font-medium text-on-surface">macOS universal · Windows x64 · Linux x86_64</dd>
 </div>
 <div class="flex justify-between items-center py-1">
 <dt class="text-on-surface-variant">Installer size</dt>
-<dd class="font-medium text-on-surface">&lt; 1 MB</dd>
+<dd class="font-medium text-on-surface">Under 1 MB each</dd>
 </div>
 <div class="flex justify-between items-center py-1">
 <dt class="text-on-surface-variant">License</dt>
@@ -519,11 +575,11 @@
 </div>
 <div class="flex justify-between items-center py-1">
 <dt class="text-on-surface-variant">Platforms</dt>
-<dd class="font-medium text-on-surface">macOS · Windows and Linux on the way</dd>
+<dd class="font-medium text-on-surface">macOS · Windows · Linux</dd>
 </div>
 <div class="flex justify-between items-center py-1">
 <dt class="text-on-surface-variant">Dependencies</dt>
-<dd class="font-medium text-on-surface">System frameworks only</dd>
+<dd class="font-medium text-on-surface">System frameworks (GTK 3 on Linux)</dd>
 </div>
 </dl>
 </div>

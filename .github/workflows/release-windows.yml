@@ -1,0 +1,63 @@
+name: release-windows
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-2022
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: false
+          install: mingw-w64-x86_64-gcc zip
+
+      - name: Core tests
+        run: |
+          set -euo pipefail
+          mkdir -p build
+          gcc -std=c11 -O2 -Wall -Wextra -Werror \
+            shared/json.c shared/skins.c shared/skins_list.c shared/history.c shared/config.c shared/tests.c \
+            -o build/core-test.exe
+          ./build/core-test.exe
+
+      - name: Build
+        run: |
+          set -euo pipefail
+          ./windows/build.sh build
+
+      - name: Test on Windows
+        shell: pwsh
+        run: ./windows/test-windows.ps1 -Exe build/copy4paste.exe
+
+      - name: Package
+        run: |
+          set -euo pipefail
+          ./windows/package.sh build/copy4paste.exe "${GITHUB_REF_NAME#v}" dist
+          (cd dist && sha256sum copy4paste-windows-x64.zip > SHA256SUMS-windows && cat SHA256SUMS-windows)
+
+      - name: Publish release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          FILES=(dist/copy4paste-windows-x64.zip dist/SHA256SUMS-windows)
+          if gh release view "${GITHUB_REF_NAME}" >/dev/null 2>&1; then
+            gh release upload "${GITHUB_REF_NAME}" "${FILES[@]}" --clobber
+          else
+            gh release create "${GITHUB_REF_NAME}" "${FILES[@]}" \
+              --title "copy4paste ${GITHUB_REF_NAME}" --notes-file RELEASE_NOTES.md
+          fi

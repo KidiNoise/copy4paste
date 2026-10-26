@@ -7,7 +7,13 @@ and never changes what you copy, paste or store.
 
 > copy4paste ships with four built-in skins — **Dark**, **Light**, **Cyan** and
 > **Midnight** — which cannot be removed. Everything you import lives alongside
-> them in `~/Library/Application Support/copy4paste/skins/`.
+> them, in the same folder on every platform:
+>
+> - macOS: `~/Library/Application Support/copy4paste/skins/`
+> - Windows: `%APPDATA%\copy4paste\skins`
+> - Linux: `~/.config/copy4paste/skins/`
+>
+> The same skin file works on all three platforms.
 
 See all six previews — the four built-ins plus the two examples in this folder — on the
 [project website](https://kidinoise.github.io/copy4paste/#skins) or in the
@@ -25,7 +31,7 @@ downloads anything. You save the file yourself, then import it.
 3. Save it and import it: open copy4paste → `⚙` → **Import JSON skin…** → pick
    your file. It applies immediately.
 4. Test it the way it is used: copy two or three different pieces of text, press
-   `⌘V` and look at the panel — the background, the highlight on the row under the
+   `⌘V` (or `Ctrl+V` on Windows and Linux) and look at the panel — the background, the highlight on the row under the
    cursor, the copied text, the small hints and the `×`. If something looks wrong,
    change the value, save and import it again; the same file name replaces the
    previous version.
@@ -98,7 +104,7 @@ Default is `9`.
 
 | Key | What it does |
 |---|---|
-| `name` | A font name available on macOS, e.g. `"Menlo"` or `"Avenir Next"`. If it is not installed, copy4paste silently uses the system font. |
+| `name` | A font name installed on the machine, e.g. `"Menlo"` on macOS, `"Consolas"` on Windows, `"DejaVu Sans Mono"` on Linux. If it is not installed, copy4paste silently uses the system font. |
 | `size` | The size of the copied text, from `8` to `36`. Default is `12`. |
 
 Both keys are optional and can be left out.

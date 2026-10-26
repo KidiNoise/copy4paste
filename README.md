@@ -5,15 +5,24 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/KidiNoise/copy4paste/releases/latest"><img alt="Version" src="https://img.shields.io/badge/version-1.2-0071e3"></a>
+  <a href="https://github.com/KidiNoise/copy4paste/releases/latest"><img alt="Version" src="https://img.shields.io/badge/version-1.3-0071e3"></a>
   <img alt="macOS" src="https://img.shields.io/badge/macOS-10.15%2B%20Intel%20%C2%B7%2011%2B%20Apple%20Silicon-1b1b1d">
+  <img alt="Windows" src="https://img.shields.io/badge/Windows-10%20%2F%2011%20x64-0078d4">
+  <img alt="Linux" src="https://img.shields.io/badge/Linux-x86__64%20%C2%B7%20GTK%203-f0a020">
   <img alt="License" src="https://img.shields.io/badge/license-MIT-006a26">
-  <img alt="No dependencies" src="https://img.shields.io/badge/dependencies-none-717785">
-  <a href="https://github.com/KidiNoise/copy4paste/actions/workflows/build-macos.yml"><img alt="Build" src="https://github.com/KidiNoise/copy4paste/actions/workflows/build-macos.yml/badge.svg"></a>
+  <img alt="No bundled runtime" src="https://img.shields.io/badge/runtime-none%20bundled-717785">
+  <br>
+  <a href="https://github.com/KidiNoise/copy4paste/actions/workflows/build-macos.yml"><img alt="Build macOS" src="https://github.com/KidiNoise/copy4paste/actions/workflows/build-macos.yml/badge.svg"></a>
+  <a href="https://github.com/KidiNoise/copy4paste/actions/workflows/build-windows.yml"><img alt="Build Windows" src="https://github.com/KidiNoise/copy4paste/actions/workflows/build-windows.yml/badge.svg"></a>
+  <a href="https://github.com/KidiNoise/copy4paste/actions/workflows/build-linux.yml"><img alt="Build Linux" src="https://github.com/KidiNoise/copy4paste/actions/workflows/build-linux.yml/badge.svg"></a>
 </p>
 
 <p align="center">
   <b><a href="https://github.com/KidiNoise/copy4paste/releases/latest/download/copy4paste-macOS-universal.dmg">Download for Mac</a></b>
+  &nbsp;·&nbsp;
+  <b><a href="https://github.com/KidiNoise/copy4paste/releases/latest/download/copy4paste-windows-x64.zip">Windows</a></b>
+  &nbsp;·&nbsp;
+  <b><a href="https://github.com/KidiNoise/copy4paste/releases/latest/download/copy4paste-linux-x86_64.tar.gz">Linux</a></b>
   &nbsp;·&nbsp;
   <a href="https://kidinoise.github.io/copy4paste/">Project website</a>
   &nbsp;·&nbsp;
@@ -31,13 +40,13 @@
 <p align="center"><a href="https://kidinoise.github.io/copy4paste/">Watch the full 21-second demo and download Copy4Paste</a></p>
 <!-- C4P GIF PREVIEW END -->
 
-Copy several pieces of text and pick which one to paste with a single key. Press `⌘V` and a small
-floating picker appears with your latest copies; hit `1`, `2`, `3`… and keep working. Native macOS,
-no Electron, no network, no history on disk.
+Copy several pieces of text and pick which one to paste with a single key. Press `⌘V` (or `Ctrl+V` on
+Windows and Linux) and a small floating picker appears with your latest copies; hit `1`, `2`, `3`… and
+keep working. Native on all three platforms, no Electron, no network, no history on disk.
 
-> **Platforms:** macOS available today (Intel and Apple Silicon in one DMG). **Windows** and **Linux**
-> are in development; they will ship as separate downloads and will not change anything that already
-> works on Mac.
+> **Platforms:** macOS 10.15+ (Intel and Apple Silicon in one DMG), Windows 10 and 11 (single `.exe`,
+> no installer), and Linux x86_64 on top of GTK 3. Same app, same four skins, same JSON skin format
+> everywhere; the picker, the shortcuts and the settings behave the same on each.
 
 ## Community skins
 
@@ -81,10 +90,15 @@ community skins: download the file and import it.
 
 ### Use a skin
 
-- **Built-in:** press `⌘V`, click the gear, choose **Skin**, pick one. The panel changes as you pick.
+- **Built-in:** press `⌘V` (or `Ctrl+V`), click the gear, choose **Skin**, pick one. The panel changes
+  as you pick.
 - **Downloaded:** open [Ocean](skins/examples/ocean.json) or [Sunset](skins/examples/sunset.json),
   press **Download raw file**, then gear → **Import JSON skin…** and choose it. It applies immediately
   and stays in your list.
+
+Imported skins are copied to `~/Library/Application Support/copy4paste/skins/` on macOS,
+`%APPDATA%\copy4paste\skins` on Windows and `~/.config/copy4paste/skins/` on Linux. A skin made for
+one platform works on the other two.
 
 ### Make your own — and share it
 
@@ -92,7 +106,7 @@ community skins: download the file and import it.
 editor; a skin you design can join the gallery above, credited to you.
 
 1. Copy [`template.json`](skins/template.json), rename it, change the five colours.
-2. Import it with **Import JSON skin…** and check it with `⌘V`.
+2. Import it with **Import JSON skin…** and check it with `⌘V` / `Ctrl+V`.
 3. Add the file to [`skins/examples/`](skins/examples/) and open a Pull Request named after your skin.
 
 - [Template](skins/template.json) — copy it, rename it, change the five colours.
@@ -104,9 +118,11 @@ editor; a skin you design can join the gallery above, credited to you.
 > A skin is **data only**: five colours, a corner radius and an optional font. Nothing in the file is
 > executed, nothing is uploaded, and the app makes no network requests. There is no in-app store —
 > you download the JSON yourself and import it. The previews above are drawn from the palette and
-> geometry in the app source; they are illustrations, not screenshots.
+> geometry in the macOS source; they are illustrations, not screenshots.
 
 ## Installation
+
+### macOS
 
 1. Download the **DMG** and open it.
 2. Drag `copy4paste.app` to **Applications**.
@@ -114,13 +130,39 @@ editor; a skin you design can join the gallery above, credited to you.
 4. System Settings → Privacy & Security → **Accessibility** → enable `copy4paste`.
 5. Copy two different pieces of text and press `⌘V`.
 
-### The app is not notarized by Apple, and here is what you will run into
+### Windows 10 and 11
 
-This matters, so it is said plainly: **the binary is signed *ad hoc*, not notarized.** Notarization
-requires an Apple Developer Program account (99 USD a year) that this project does not have. In
-practice macOS distrusts the file the first time, even though the code is open and anyone can build it.
+1. Download `copy4paste-windows-x64.zip` and unpack it anywhere: the `.exe` is the whole app.
+2. Run `copy4paste.exe`. SmartScreen may warn once because the build is not code-signed: **More info
+   → Run anyway**. If you prefer, right-click the file → Properties → **Unblock** before running it.
+3. It waits in the notification area (next to the clock). Right-click the icon for the picker,
+   Settings and Quit; `Ctrl+Alt+P` opens Settings from anywhere.
+4. Copy two different pieces of text and press `Ctrl+V`.
 
-What happens depends on your version:
+To start it with Windows, put a shortcut to the `.exe` in `shell:startup` (press `Win+R`, type
+`shell:startup`).
+
+### Linux
+
+1. Download `copy4paste-linux-x86_64.tar.gz` and unpack it, or install `copy4paste_x86_64.deb` with
+   your package manager.
+2. From the unpacked folder run `./install.sh`: it copies the binary to `~/.local/bin`, adds the menu
+   entry and the icon, and needs no root.
+3. Run `copy4paste` (or pick it from the applications menu) and copy two different pieces of text.
+4. On X11, `Ctrl+V` opens the picker from any app. On **Wayland**, the compositor does not let an
+   application intercept `Ctrl+V`: bind a keyboard shortcut of your desktop to `copy4paste --select`.
+   That is a limitation of Wayland itself, not of the app.
+
+Requires GTK 3, libX11 and libXtst — present on every desktop distribution; nothing else is bundled.
+
+### The builds are not notarized or code-signed, and here is what you will run into
+
+This matters, so it is said plainly: **the macOS binary is signed *ad hoc*, and the Windows one is not
+signed at all.** Notarization and a code-signing certificate cost money every year and this project
+does not have them. In practice the systems distrust the file the first time, even though the code is
+open and anyone can build it.
+
+**macOS** depends on your version:
 
 - **macOS 10.15 to 14**: right-click the app → **Open** → **Open**. First launch only.
 - **macOS 15 or later**: «right-click → Open» may no longer offer that button. Then:
@@ -140,32 +182,37 @@ What happens depends on your version:
 After the first launch the warning does not come back. The **Accessibility** permission does have to
 be granted again whenever the app is rebuilt, because it is tied to the signature.
 
-If you ever want the warning gone for everyone, the path is already wired: an Apple Developer account,
-a *Developer ID Application* certificate and five repository secrets. The workflow
+**Windows**: SmartScreen shows «Windows protected your PC» once. **More info → Run anyway**, or
+unblock the file in its Properties. There is no installer and no admin prompt.
+
+**Linux**: no warning; the tarball is a plain binary and the `.deb` installs like any other package.
+
+If you ever want the warnings gone for everyone, the macOS path is already wired: an Apple Developer
+account, a *Developer ID Application* certificate and five repository secrets. The workflow
 `.github/workflows/build-macos.yml` signs with Hardened Runtime, notarizes and verifies on its own,
 with no code changes. See [NOTARIZATION.md](NOTARIZATION.md).
 
 ## What it does
 
-- `⌘C` keeps the last **4 texts** (adjustable from 1 to 30).
-- `⌘V`: picker with the **most recent copy on top**.
+- Copy keeps the last **4 texts** (adjustable from 1 to 30).
+- Paste (`⌘V` on macOS, `Ctrl+V` on Windows and Linux): picker with the **most recent copy on top**.
   - `1`–`9` pastes that copy · `↑`/`↓` + `Enter` navigates · `Backspace` deletes without pasting ·
     `Esc` cancels.
   - The `×` on the right of each row deletes that entry with the mouse.
-- `⚙` (or `⌃⌥⌘P`) opens Settings: number of copies, **skin** (Dark, Light, Cyan,
+- `⚙` (or `Ctrl+Alt+P`; `⌃⌥⌘P` on macOS) opens Settings: number of copies, **skin** (Dark, Light, Cyan,
   Midnight or any imported community skin), **opacity** and quit.
-- **Community skins**: download a `.json` skin, import it from Settings and it applies
-  instantly. See [skins/](skins/README.md).
-- With a single copy, or when the clipboard holds files or images, `⌘V` behaves as usual.
-- No Dock icon, no window at launch, no history on disk.
+- **Community skins**: download a `.json` skin, import it from Settings and it applies instantly.
+  See [skins/](skins/README.md).
+- With a single copy, or when the clipboard holds files or images, the paste key behaves as usual.
+- No Dock icon, no window at launch, no history on disk. On Windows it lives in the notification area;
+  on Linux it runs with a menu entry and no window.
 
 ## Privacy
 
 The history lives **in RAM** and disappears when the app quits. Only preferences are stored (number of
-copies, skin, opacity). Imported skins are plain JSON files copied to
-`~/Library/Application Support/copy4paste/skins/`; they contain no code. No network, no telemetry, no
-accounts, no cloud. It is worth quitting it while handling passwords: some apps do not flag sensitive
-data on the clipboard properly.
+copies, skin, opacity). Imported skins are plain JSON files copied to the folder listed above; they
+contain no code. No network, no telemetry, no accounts, no cloud. It is worth quitting it while
+handling passwords: some apps do not flag sensitive data on the clipboard properly.
 
 ## Downloads
 
@@ -173,11 +220,17 @@ data on the clipboard properly.
 |---|---|
 | `copy4paste-macOS-universal.dmg` | Installer. Intel 10.15+ and Apple Silicon 11+ in a single binary. |
 | `copy4paste-macOS-universal.zip` | The same app zipped, in case the DMG gives you trouble. |
-| `SHA256SUMS` | Checksums to verify the download arrived intact. |
+| `copy4paste-windows-x64.zip` | The Windows app: one `.exe`, no installer, no admin rights. |
+| `copy4paste-linux-x86_64.tar.gz` | Linux build with `install.sh`, menu entry and icon. |
+| `copy4paste_x86_64.deb` | The same Linux build as a Debian/Ubuntu package. |
+| `SHA256SUMS`, `SHA256SUMS-linux`, `SHA256SUMS-windows` | Checksums to verify the download arrived intact. |
 
 ## Build
 
-Requires Xcode Command Line Tools on macOS.
+Every platform lives in its own folder with its own workflow. Nothing is shared between them except
+the C core in `shared/` that Windows and Linux use for skins, history and preferences.
+
+**macOS** — requires Xcode Command Line Tools:
 
 ```bash
 swiftc -swift-version 5 macos/Core/HistoryStore.swift macos/Core/SkinTheme.swift macos/Tests/main.swift -o /tmp/copy4paste-core-test
@@ -187,22 +240,50 @@ swiftc -swift-version 5 macos/Core/HistoryStore.swift macos/Core/SkinTheme.swift
 The app and the DMG are built by GitHub Actions on a macOS runner
 (`.github/workflows/build-macos.yml`), from the code in `macos/`: tests, a **universal** binary
 (Intel 10.15 + Apple Silicon 11.0), interface test, runtime test, signing, HFS+ DMG and a check of the
-mounted DMG. Pushing a `v*` tag makes `release-macos.yml` publish the Release with the DMG, the ZIP and
-`SHA256SUMS`.
+mounted DMG.
+
+**Windows** — cross-compiled with mingw-w64, no Visual Studio needed:
+
+```bash
+./windows/build.sh build
+# core tests, then the real hook and clipboard through SendInput:
+cc -std=c11 -O2 -Wall -Wextra -Werror shared/*.c -o build/core-test.exe   # any C11 compiler
+./windows/test-windows.ps1 -Exe build\copy4paste.exe                     # on Windows
+```
+
+`.github/workflows/build-windows.yml` builds and tests on a real Windows runner: the low-level
+keyboard hook, `Ctrl+V`, the digit selection, the skins and the settings window. From Linux the same
+binary can be checked through Wine with `windows/test-windows.sh`.
+
+**Linux** — needs `libgtk-3-dev`, `libxtst-dev`, `pkg-config` and a C compiler:
+
+```bash
+./linux/build.sh build
+xvfb-run -a --server-args="-screen 0 1440x900x24" sh linux/test-linux.sh build/copy4paste
+```
+
+`linux/build.sh` produces `build/copy4paste`; `linux/package.sh` makes the tarball and the `.deb`.
+The core tests (`shared/tests.c`) run on every platform: colours, skin parsing and its error messages,
+imports, the history rules and the preferences file.
+
+Pushing a `v*` tag makes the three release workflows publish their files into the same Release:
+`release-macos.yml`, `release-windows.yml` and `release-linux.yml`.
 
 ## Layout
 
 ```
 macos/     AppKit app (Sources, Core, Tests, Info.plist, icon)
+windows/   Win32 app (main.c, resources, build and test scripts)
+linux/     GTK 3 app (main.c, desktop entry, install and package scripts)
+shared/    C core used by Windows and Linux: skins, history, preferences, tests
 skins/     community skins: template, examples and guide
 docs/      project website
-.github/   macOS build and release workflows
+.github/   per-platform build and release workflows
 ```
 
-Each platform lives in its own folder with its own build workflow. When Windows and Linux are ready
-they will be added as `windows/` and `linux/`, with their `.github/workflows/build-<platform>.yml`,
-and will publish their archive in the same Release. Nothing that already works on macOS is touched:
-they are new files next to it.
+Each platform keeps its own code: the picker is drawn by the system toolkit of each platform (AppKit,
+GDI, Cairo) with the same geometry, and the shared C core guarantees the four skins and the imported
+ones look and parse the same everywhere.
 
 Website notes in [`docs/README.md`](docs/README.md).
 

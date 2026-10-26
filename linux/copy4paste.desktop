@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=copy4paste
+GenericName=Clipboard history
+Comment=Choose which of your last copies to paste
+Exec=copy4paste
+Icon=copy4paste
+Terminal=false
+Categories=Utility;Accessibility;
+Keywords=clipboard;paste;copy;history;
+StartupNotify=false
