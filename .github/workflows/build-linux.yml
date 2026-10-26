@@ -53,6 +53,24 @@ jobs:
           set -euo pipefail
           xvfb-run -a --server-args="-screen 0 1440x900x24" sh linux/test-linux.sh build/copy4paste
 
+      - name: One instance owns the history, --select reaches it
+        run: |
+          set -euo pipefail
+          xvfb-run -a --server-args="-screen 0 1440x900x24" sh linux/test-ipc.sh build/copy4paste
+
+      - name: A Ctrl+V taken by another application is detected
+        run: |
+          set -euo pipefail
+          cc -std=c11 -O2 -Wall -Wextra -Werror linux/tests/grab_ctrl_v.c -lX11 -o build/grab_ctrl_v
+          xvfb-run -a --server-args="-screen 0 1440x900x24" \
+            sh linux/test-x11-conflict.sh build/copy4paste build/grab_ctrl_v
+
+      - name: Real Wayland session (headless weston) refuses and explains
+        run: |
+          set -euo pipefail
+          sudo apt-get install -y --no-install-recommends weston
+          sh linux/test-wayland.sh build/copy4paste
+
       - name: Screenshots of every skin
         run: |
           set -euo pipefail

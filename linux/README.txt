@@ -1,5 +1,5 @@
-copy4paste for Linux
-====================
+copy4paste for Linux (BETA)
+===========================
 
 Choose which of your last copies to paste. Press Ctrl+V and a small picker
 appears where the cursor is: press 1-9 to paste that copy, use the arrow keys
@@ -26,17 +26,30 @@ Requirements: GTK 3 (already present on GNOME, KDE, XFCE, Cinnamon…), plus
 libX11 and libXtst for the global shortcut. Without XTEST the picker still
 opens from `copy4paste --select` and the app cannot send Ctrl+V for you.
 
-Wayland
--------
+Wayland: not supported
+-----------------------
 
-On a Wayland session an application is not allowed to intercept Ctrl+V, so the
-picker has to be started from a shortcut you bind yourself:
+A Wayland compositor gives an application no way to read the clipboard in the
+background, and none to intercept Ctrl+V. There is therefore no history to
+show, and copy4paste stops at startup with a message saying so, instead of
+opening an empty picker.
 
-  copy4paste --select
+Use an X11 session (Xorg). If your desktop offers "X11" at the login screen,
+choose it. `echo $XDG_SESSION_TYPE` says which one you are in.
 
-GNOME: Settings > Keyboard > Custom Shortcuts > add a shortcut that runs
-`copy4paste --select`. KDE: System Settings > Shortcuts. On X11 (or a session
-running through XWayland) Ctrl+V works by itself.
+This is a known limitation, tracked in the project issue tracker, not something
+a shortcut can work around.
+
+One instance, several commands
+------------------------------
+
+The history lives in the running instance. `copy4paste --select` and
+`copy4paste --settings` talk to it over a socket in $XDG_RUNTIME_DIR, so a
+shortcut or a menu entry reaches the same history:
+
+  copy4paste --select      open the picker (bind it to a key you like)
+  copy4paste --settings    open Settings
+  copy4paste --status      what the running instance is doing
 
 Skins
 -----

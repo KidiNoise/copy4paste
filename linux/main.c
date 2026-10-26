@@ -13,6 +13,13 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <errno.h>
+#include <sys/socket.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <sys/un.h>
+#include <unistd.h>
+
 #if defined(GDK_WINDOWING_X11)
 #include <gdk/gdkx.h>
 #include <X11/Xlib.h>
@@ -55,6 +62,16 @@ static char *forced_skin;   /* --skin, for screenshots and tests */
 static int self_test;
 static int verify_mode;
 static int self_test_seconds = 15;
+
+/* One server per session: --select and --settings talk to the running app,
+ * because the clipboard history only exists in that process's memory. */
+static int g_server_fd = -1;
+static char g_socket_path[108];
+
+/* 0 = not tried yet, 1 = grabbed, 2 = somebody else owns Ctrl+V */
+static int g_hotkey_state;
+static int g_ctrl_alt_p_state;
+static int g_wayland;
 
 #if defined(GDK_WINDOWING_X11)
 static Display *x_display;
@@ -189,6 +206,14 @@ static void on_owner_change(GtkClipboard *clipboard, GdkEvent *event, gpointer d
 
 #if defined(GDK_WINDOWING_X11)
 
+static int g_grab_errors;
+
+static int grab_error_handler(Display *display, XErrorEvent *error) {
+    (void)display;
+    if (error->error_code == BadAccess) g_grab_errors++;
+    return 0;
+}
+
 static void ungrab_keys(void) {
     if (!x_display || !key_grab_ok) return;
     XUngrabKey(x_display, key_v, AnyModifier, x_root);
@@ -201,12 +226,25 @@ static void grab_keys(void) {
     unsigned int locks[] = { 0, LockMask, Mod2Mask, LockMask | Mod2Mask,
                              Mod5Mask, LockMask | Mod5Mask, Mod2Mask | Mod5Mask,
                              LockMask | Mod2Mask | Mod5Mask };
+    XErrorHandler previous = XSetErrorHandler(grab_error_handler);
     size_t i;
     for (i = 0; i < sizeof locks / sizeof locks[0]; i++) {
+        /* BadAccess here means another client already owns this combination:
+         * the desktop, a keyboard manager, or another copy4paste. */
+        g_grab_errors = 0;
         XGrabKey(x_display, key_v, ControlMask | locks[i], x_root, False, GrabModeAsync, GrabModeAsync);
+        XSync(x_display, False);
+        if (g_grab_errors) g_hotkey_state = 2;
+        else if (g_hotkey_state == 0) g_hotkey_state = 1;
+
+        g_grab_errors = 0;
         XGrabKey(x_display, key_p, ControlMask | Mod1Mask | locks[i], x_root, False, GrabModeAsync,
                  GrabModeAsync);
+        XSync(x_display, False);
+        if (g_grab_errors) g_ctrl_alt_p_state = 2;
+        else if (g_ctrl_alt_p_state == 0) g_ctrl_alt_p_state = 1;
     }
+    XSetErrorHandler(previous);
     XSync(x_display, False);
 }
 
@@ -883,12 +921,171 @@ static GdkFilterReturn x11_filter(GdkXEvent *xevent, GdkEvent *event, gpointer d
 }
 #endif
 
+/* --- one instance, and talking to it ---------------------------------- */
+
+static void socket_path_build(void) {
+    const char *runtime = getenv("XDG_RUNTIME_DIR");
+    if (runtime && *runtime) {
+        snprintf(g_socket_path, sizeof g_socket_path, "%.80s/copy4paste.sock", runtime);
+    } else {
+        snprintf(g_socket_path, sizeof g_socket_path, "/tmp/c4p-%d.sock", (int)getuid());
+    }
+}
+
+/*
+ * Returns 1 and writes the reply when a copy4paste instance answered,
+ * 0 when nothing is listening. The protocol is one line in, one line out,
+ * so it stays readable with printf and easy to fake in a test.
+ */
+static int ipc_request(const char *command, char *reply, size_t reply_length) {
+    if (reply && reply_length) reply[0] = '\0';
+    socket_path_build();
+    int fd = socket(AF_UNIX, SOCK_STREAM, 0);
+    if (fd < 0) return 0;
+    struct sockaddr_un address;
+    memset(&address, 0, sizeof address);
+    address.sun_family = AF_UNIX;
+    snprintf(address.sun_path, sizeof address.sun_path, "%s", g_socket_path);
+    int ok = 0;
+    if (connect(fd, (struct sockaddr *)&address, sizeof address) == 0) {
+        char line[256];
+        int length = snprintf(line, sizeof line, "%s\n", command);
+        if (write(fd, line, (size_t)length) == length) {
+            char buffer[1024];
+            ssize_t got = read(fd, buffer, sizeof buffer - 1);
+            if (got > 0) {
+                buffer[got] = '\0';
+                char *newline = strchr(buffer, '\n');
+                if (newline) *newline = '\0';
+                if (reply && reply_length) snprintf(reply, reply_length, "%s", buffer);
+                ok = 1;
+            }
+        }
+    }
+    close(fd);
+    return ok;
+}
+
+static void ipc_reply(int fd, const char *text) {
+    char line[1200];
+    int length = snprintf(line, sizeof line, "%s\n", text ? text : "ok");
+    if (length > 0) {
+        ssize_t written = write(fd, line, (size_t)length);
+        (void)written;
+    }
+}
+
+static gboolean deliver_select(void *unused) {
+    (void)unused;
+    show_panel_at_pointer();
+    return G_SOURCE_REMOVE;
+}
+
+static gboolean deliver_settings(void *unused) {
+    (void)unused;
+    open_settings();
+    return G_SOURCE_REMOVE;
+}
+
+static gboolean deliver_quit(void *unused) {
+    (void)unused;
+    gtk_main_quit();
+    return G_SOURCE_REMOVE;
+}
+
+static gboolean on_client(GIOChannel *source, GIOCondition condition, gpointer data) {
+    (void)data;
+    if (!(condition & G_IO_IN)) return TRUE;
+    int fd = g_io_channel_unix_get_fd(source);
+    int client = accept(fd, NULL, NULL);
+    if (client < 0) return TRUE;
+
+    char buffer[256];
+    ssize_t got = read(client, buffer, sizeof buffer - 1);
+    if (got <= 0) {
+        close(client);
+        return TRUE;
+    }
+    buffer[got] = '\0';
+    char *newline = strchr(buffer, '\n');
+    if (newline) *newline = '\0';
+
+    if (strcmp(buffer, "select") == 0) {
+        ipc_reply(client, "ok");
+        close(client);
+        g_idle_add(deliver_select, NULL);
+    } else if (strcmp(buffer, "settings") == 0) {
+        ipc_reply(client, "ok");
+        close(client);
+        g_idle_add(deliver_settings, NULL);
+    } else if (strcmp(buffer, "quit") == 0) {
+        ipc_reply(client, "ok");
+        close(client);
+        g_idle_add(deliver_quit, NULL);
+    } else if (strcmp(buffer, "status") == 0) {
+        const c4p_skin *skin = current_skin();
+        char reply[600];
+        snprintf(reply, sizeof reply,
+                 "running=1 entries=%d skips=%d hotkey=%s settings_key=%s backend=%s skin=%s "
+                 "panel_visible=%d capacity=%d opacity=%d",
+                 history.count, skins.count,
+                 g_hotkey_state == 1 ? "grabbed" : (g_hotkey_state == 2 ? "unavailable" : "unknown"),
+                 g_ctrl_alt_p_state == 1 ? "grabbed"
+                                         : (g_ctrl_alt_p_state == 2 ? "unavailable" : "unknown"),
+                 g_wayland ? "wayland" : "x11", skin->id, panel_visible, config.capacity,
+                 config.opacity);
+        ipc_reply(client, reply);
+        close(client);
+    } else {
+        ipc_reply(client, "error unknown-command");
+        close(client);
+    }
+    return TRUE;
+}
+
+/* Returns 1 when this process is now the one the others talk to. */
+static int ipc_serve_start(void) {
+    socket_path_build();
+    /* A socket left behind by a crash must not lock the user out. */
+    if (access(g_socket_path, F_OK) == 0 && !ipc_request("status", NULL, 0)) unlink(g_socket_path);
+
+    int fd = socket(AF_UNIX, SOCK_STREAM, 0);
+    if (fd < 0) return 0;
+    struct sockaddr_un address;
+    memset(&address, 0, sizeof address);
+    address.sun_family = AF_UNIX;
+    snprintf(address.sun_path, sizeof address.sun_path, "%s", g_socket_path);
+    if (bind(fd, (struct sockaddr *)&address, sizeof address) != 0) {
+        close(fd);
+        return 0;
+    }
+    chmod(g_socket_path, 0600);
+    if (listen(fd, 8) != 0) {
+        close(fd);
+        unlink(g_socket_path);
+        return 0;
+    }
+    g_server_fd = fd;
+    GIOChannel *channel = g_io_channel_unix_new(fd);
+    g_io_add_watch(channel, G_IO_IN, on_client, NULL);
+    g_io_channel_unref(channel);
+    return 1;
+}
+
+static void ipc_serve_stop(void) {
+    if (g_server_fd >= 0) {
+        close(g_server_fd);
+        g_server_fd = -1;
+        unlink(g_socket_path);
+    }
+}
+
 static void setup_hotkeys(void) {
 #if defined(GDK_WINDOWING_X11)
     if (!GDK_IS_X11_DISPLAY(gdk_display_get_default())) {
-        fprintf(stderr,
-                "copy4paste: this is a Wayland session, so Ctrl+V cannot be intercepted.\n"
-                "            Bind a keyboard shortcut to `copy4paste --select` in your desktop settings.\n");
+        g_wayland = 1;
+        g_hotkey_state = 2;
+        g_ctrl_alt_p_state = 2;
         return;
     }
     x_display = GDK_DISPLAY_XDISPLAY(gdk_display_get_default());
@@ -902,8 +1099,18 @@ static void setup_hotkeys(void) {
     key_grab_ok = key_v != 0 && key_p != 0;
     grab_keys();
     gdk_window_add_filter(NULL, x11_filter, NULL);
+    if (g_hotkey_state == 2) {
+        fprintf(stderr,
+                "copy4paste: another application already owns Ctrl+V, so the picker cannot open\n"
+                "            from that key. Bind `copy4paste --select` to a shortcut you choose,\n"
+                "            or quit whichever program is holding Ctrl+V.\n");
+    }
+    if (g_ctrl_alt_p_state == 2) {
+        fprintf(stderr, "copy4paste: another application already owns Ctrl+Alt+P (settings).\n");
+    }
 #else
-    fprintf(stderr, "copy4paste: built without X11 support; start the picker with `copy4paste --select`.\n");
+    g_hotkey_state = 2;
+    g_ctrl_alt_p_state = 2;
 #endif
 }
 
@@ -999,6 +1206,33 @@ int main(int argc, char **argv) {
             free(dir);
             return 0;
         }
+        if (strcmp(argv[i], "--print-support") == 0) {
+            /* Used by the tests and by bug reports: what this build can do
+             * in this session, including whether another app owns Ctrl+V. */
+            const char *runtime = getenv("XDG_RUNTIME_DIR");
+            char reply[1024];
+            int running = ipc_request("status", reply, sizeof reply);
+            int wayland = 0;
+            const char *display = getenv("DISPLAY");
+            const char *wayland_display = getenv("WAYLAND_DISPLAY");
+            if (!display || !*display) wayland = 1;
+            else if (wayland_display && *wayland_display) wayland = 1;
+            printf("{\"version\":\"%s\",\"platform\":\"linux\",\"session\":\"%s\","
+                   "\"running\":%s,\"socket\":\"%s\",\"runtime_dir\":%s,\"status\":\"%s\"}\n",
+                   C4P_VERSION, wayland ? "wayland" : "x11", running ? "true" : "false",
+                   g_socket_path[0] ? g_socket_path : "", runtime && *runtime ? "true" : "false",
+                   running ? reply : "");
+            return running ? 0 : 4;
+        }
+        if (strcmp(argv[i], "--status") == 0) {
+            char reply[1024];
+            if (!ipc_request("status", reply, sizeof reply)) {
+                fprintf(stderr, "copy4paste: no instance is running\n");
+                return 4;
+            }
+            printf("%s\n", reply);
+            return 0;
+        }
         if (strcmp(argv[i], "--version-json") == 0) {
             c4p_skin_list early;
             c4p_skin_list_init(&early);
@@ -1008,6 +1242,59 @@ int main(int argc, char **argv) {
             c4p_skin_list_free(&early);
             free(early_dir);
             return 0;
+        }
+    }
+
+    /* A Wayland session cannot be served: the compositor neither lets an
+     * application read the clipboard in the background nor intercept Ctrl+V.
+     * Say it and stop, instead of pretending and showing an empty picker. */
+    {
+        const char *backend = getenv("GDK_BACKEND");
+        const char *wayland_display = getenv("WAYLAND_DISPLAY");
+        const char *display = getenv("DISPLAY");
+        int will_be_wayland = 0;
+        if (backend && strcmp(backend, "wayland") == 0) will_be_wayland = 1;
+        else if (!backend && wayland_display && *wayland_display && (!display || !*display))
+            will_be_wayland = 1;
+        if (will_be_wayland) {
+            int wants_help = 0;
+            for (i = 1; i < argc; i++) {
+                if (strcmp(argv[i], "--help") == 0 || strcmp(argv[i], "--print-support") == 0) wants_help = 1;
+            }
+            if (!wants_help) {
+                fprintf(stderr,
+                        "copy4paste: this is a Wayland session and the app cannot work there.\n"
+                        "            Wayland does not let an application read the clipboard in the\n"
+                        "            background or intercept Ctrl+V, so there is no history to show.\n"
+                        "            Log in to an X11 session (or Xorg) and run copy4paste again.\n"
+                        "            Details: https://github.com/KidiNoise/copy4paste/issues\n");
+                return 3;
+            }
+        }
+    }
+
+    /* If another copy4paste is running, it owns the history: hand the request
+     * over instead of starting a second, empty picker. A plain launch with an
+     * instance already there exits quietly instead of adding a duplicate. */
+    {
+        int wants_select = 0, wants_settings = 0, other_work = self_test || verify_mode;
+        for (i = 1; i < argc; i++) {
+            if (strcmp(argv[i], "--select") == 0) wants_select = 1;
+            else if (strcmp(argv[i], "--settings") == 0) wants_settings = 1;
+            else if (strcmp(argv[i], "--skin") == 0 || strcmp(argv[i], "--test-seconds") == 0) i++;
+        }
+        if (!other_work && (wants_select || wants_settings)) {
+            char reply[256];
+            const char *command = wants_settings ? "settings" : "select";
+            /* The panel opens in the running instance; this process is done.
+             * With no instance the request fails and we become the instance. */
+            if (ipc_request(command, reply, sizeof reply)) return 0;
+        } else if (!other_work) {
+            char reply[256];
+            if (ipc_request("status", reply, sizeof reply)) {
+                fprintf(stderr, "copy4paste: already running (Ctrl+V opens the picker)\n");
+                return 0;
+            }
         }
     }
 
@@ -1045,6 +1332,7 @@ int main(int argc, char **argv) {
 
     ensure_panel();
     connect_panel_events();
+    if (!self_test && !verify_mode) ipc_serve_start();
     setup_hotkeys();
 
     if (self_test) {
@@ -1069,6 +1357,7 @@ int main(int argc, char **argv) {
 #if defined(GDK_WINDOWING_X11)
     ungrab_keys();
 #endif
+    ipc_serve_stop();
     c4p_history_free(&history);
     c4p_skin_list_free(&skins);
     free(config_path);

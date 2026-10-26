@@ -82,6 +82,10 @@ static wchar_t g_log_path[MAX_PATH];
 
 static int g_self_test;
 static int g_verify;
+static int g_no_hook;              /* --no-hook: behave as if the hook failed */
+static int g_accept_injected;      /* --test-accept-injected: test-only seam */
+static DWORD g_own_input_until;    /* our own synthetic paste must never come back */
+static FILE *g_status;             /* --status-file: what the app could set up */
 static int g_test_seconds = 15;
 
 static HFONT g_row_font;
@@ -571,6 +575,8 @@ static void show_panel_at_pointer(void) {
 }
 
 static void send_paste(void) {
+    /* Same guard as the INJECTED flag, but explicit: this is our paste. */
+    g_own_input_until = GetTickCount() + 700;
     INPUT inputs[4];
     memset(inputs, 0, sizeof inputs);
     inputs[0].type = INPUT_KEYBOARD;
@@ -1064,7 +1070,9 @@ static LRESULT CALLBACK keyboard_proc(int code, WPARAM wparam, LPARAM lparam) {
     if (code == HC_ACTION && (wparam == WM_KEYDOWN || wparam == WM_SYSKEYDOWN)) {
         KBDLLHOOKSTRUCT *info = (KBDLLHOOKSTRUCT *)lparam;
         int injected = (info->flags & LLKHF_INJECTED) != 0;
-        if (injected && !(g_simulate_key != 0 && info->vkCode == g_simulate_key)) {
+        int ours = g_own_input_until != 0 && (LONG)(GetTickCount() - g_own_input_until) < 0;
+        int let_through = g_accept_injected || (g_simulate_key != 0 && info->vkCode == g_simulate_key);
+        if (injected && (ours || !let_through)) {
             return CallNextHookEx(g_hook, code, wparam, lparam);
         }
         int ctrl = (GetAsyncKeyState(VK_CONTROL) & 0x8000) != 0;
@@ -1278,6 +1286,13 @@ static int parse_arguments(int argc, wchar_t **argv) {
             return 1;
         }
         if (wcscmp(argv[i], L"--self-test") == 0) g_self_test = 1;
+        else if (wcscmp(argv[i], L"--no-hook") == 0) g_no_hook = 1;
+        else if (wcscmp(argv[i], L"--test-accept-injected") == 0) g_accept_injected = 1;
+        else if (wcscmp(argv[i], L"--status-file") == 0 && i + 1 < argc) {
+            char *path = narrow(argv[++i]);
+            g_status = path ? fopen(path, "w") : NULL;
+            free(path);
+        }
         else if (wcscmp(argv[i], L"--verify") == 0) g_verify = 1;
         else if (wcscmp(argv[i], L"--skin") == 0 && i + 1 < argc) {
             free(g_forced_skin);
@@ -1349,9 +1364,20 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE previous, PWSTR command_line, 
         import_skin_cli(argc, argv);
     }
 
-    if (!g_self_test && !g_verify && !wants_command(argc, argv, L"--settings") &&
-        !wants_command(argc, argv, L"--select")) {
-        keep_single_instance();
+    /* A second --select or --settings must talk to the instance that owns the
+     * history, exactly like a second plain launch does. */
+    if (!g_self_test && !g_verify) {
+        int wants_picker = wants_command(argc, argv, L"--select");
+        int wants_settings_window = wants_command(argc, argv, L"--settings");
+        if (wants_picker || wants_settings_window) {
+            HWND existing = FindWindowW(L"Copy4pasteMessage", NULL);
+            if (existing) {
+                PostMessageW(existing, wants_settings_window ? WM_C4P_OPEN_SETTINGS : WM_C4P_OPEN_PICKER, 0,
+                             0);
+                return 0;
+            }
+        }
+        if (!wants_picker && !wants_settings_window) keep_single_instance();
     }
 
     INITCOMMONCONTROLSEX controls;
@@ -1376,7 +1402,29 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE previous, PWSTR command_line, 
 
     AddClipboardFormatListener(g_message_window);
     SetTimer(g_message_window, 20, 400, NULL);
-    g_hook = SetWindowsHookExW(WH_KEYBOARD_LL, keyboard_proc, instance, 0);
+    g_hook = g_no_hook ? NULL : SetWindowsHookExW(WH_KEYBOARD_LL, keyboard_proc, instance, 0);
+    if (!g_hook && !g_no_hook) {
+        /* Another process may hold the hook host, or the session refuses it.
+         * Say it instead of leaving the user pressing Ctrl+V for nothing. */
+        NOTIFYICONDATAW balloon;
+        memset(&balloon, 0, sizeof balloon);
+        balloon.cbSize = sizeof balloon;
+        balloon.hWnd = g_message_window;
+        balloon.uID = ID_TRAY;
+        balloon.uFlags = NIF_INFO;
+        balloon.dwInfoFlags = NIIF_WARNING;
+        wcscpy(balloon.szInfoTitle, L"Ctrl+V is not available");
+        wcscpy(balloon.szInfo,
+               L"copy4paste could not install its keyboard hook. Use the tray icon or the picker "
+               L"shortcut opened from there; everything else works.");
+        Shell_NotifyIconW(NIM_MODIFY, &balloon);
+    }
+    if (g_status) {
+        fprintf(g_status, "VERSION=%s\nHOOK=%s\n", C4P_VERSION,
+                (g_hook && !g_no_hook) ? "installed" : "unavailable");
+        fprintf(g_status, "TRAY=%s\n", g_tray_added ? "installed" : "unavailable");
+        fflush(g_status);
+    }
     if (getenv("C4P_DEBUG")) {
         g_debug = fopen("C:\\c4p-debug.log", "w");
         if (g_debug) {

@@ -34,7 +34,7 @@
 <div class="inline-flex items-center gap-space-xs px-3.5 py-1.5 rounded-full bg-surface-container-high/80 backdrop-blur-md shadow-[0_1px_2px_rgba(0,0,0,0.04)] mb-8 transition-transform hover:scale-[1.01]">
 <span class="w-1.5 h-1.5 rounded-full bg-tertiary-container animate-pulse"></span>
 <span class="font-label-sm text-label-sm text-on-surface-variant font-medium tracking-tight">
-          v1.3 · macOS · Windows · Linux · MIT
+          v1.3 · macOS stable · Windows and Linux beta · MIT
         </span>
 </div>
 <!-- C4P BRAND IMAGE START -->
@@ -64,14 +64,21 @@
 <div class="flex flex-col sm:flex-row items-center justify-center gap-space-sm -mt-12 mb-14">
 <a class="inline-flex items-center gap-space-xs px-6 py-3 rounded-full bg-surface-container-high/90 text-on-surface hover:bg-surface-variant transition-colors shadow-[0_1px_2px_rgba(0,0,0,0.06)]" href="https://github.com/KidiNoise/copy4paste/releases/latest/download/copy4paste-windows-x64.zip" download>
 <span class="font-label-md text-label-md font-medium">Windows .zip</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">beta</span>
 </a>
 <a class="inline-flex items-center gap-space-xs px-6 py-3 rounded-full bg-surface-container-high/90 text-on-surface hover:bg-surface-variant transition-colors shadow-[0_1px_2px_rgba(0,0,0,0.06)]" href="https://github.com/KidiNoise/copy4paste/releases/latest/download/copy4paste-linux-x86_64.tar.gz" download>
 <span class="font-label-md text-label-md font-medium">Linux .tar.gz</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">beta</span>
 </a>
 <a class="inline-flex items-center gap-space-xs px-6 py-3 rounded-full bg-surface-container-high/90 text-on-surface hover:bg-surface-variant transition-colors shadow-[0_1px_2px_rgba(0,0,0,0.06)]" href="https://github.com/KidiNoise/copy4paste/releases/latest/download/copy4paste_x86_64.deb" download>
 <span class="font-label-md text-label-md font-medium">.deb</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">beta</span>
 </a>
 </div>
+<p class="font-label-sm text-label-sm text-on-surface-variant -mt-8 mb-14 text-center max-w-[640px] mx-auto">
+Windows and Linux are <strong>beta</strong>: tested automatically, not yet used by real people.
+On Wayland the Linux app does not run and says so — log in with an X11 session.
+</p>
 <!-- C4P LAUNCH VIDEO START -->
 <figure style="width:min(100%,860px);margin:0 auto 50px;padding:0 4px;text-align:center;box-sizing:border-box">
   <video controls autoplay loop muted playsinline preload="metadata"
@@ -484,7 +491,7 @@
 </div>
 </div>
 
-<h3 class="font-label-sm text-label-sm font-semibold uppercase tracking-wider text-primary mt-6">Windows 10 and 11</h3>
+<h3 class="font-label-sm text-label-sm font-semibold uppercase tracking-wider text-primary mt-6">Windows 10 and 11 · beta</h3>
 <div class="p-6 rounded-2xl bg-surface-container-lowest shadow-[0_1px_3px_rgba(0,0,0,0.02)] flex items-start gap-4">
 <div class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center font-label-md text-label-md font-semibold text-on-surface shrink-0">1</div>
 <div>
@@ -507,7 +514,7 @@
 </div>
 </div>
 
-<h3 class="font-label-sm text-label-sm font-semibold uppercase tracking-wider text-primary mt-6">Linux (x86_64, GTK 3)</h3>
+<h3 class="font-label-sm text-label-sm font-semibold uppercase tracking-wider text-primary mt-6">Linux (x86_64, GTK 3) · beta</h3>
 <div class="p-6 rounded-2xl bg-surface-container-lowest shadow-[0_1px_3px_rgba(0,0,0,0.02)] flex items-start gap-4">
 <div class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center font-label-md text-label-md font-semibold text-on-surface shrink-0">1</div>
 <div>
@@ -525,8 +532,8 @@
 <div class="p-6 rounded-2xl bg-surface-container-lowest shadow-[0_1px_3px_rgba(0,0,0,0.02)] flex items-start gap-4">
 <div class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center font-label-md text-label-md font-semibold text-on-surface shrink-0">3</div>
 <div>
-<h4 class="font-headline-sm text-headline-sm text-on-surface font-medium mb-1">On Wayland, bind one shortcut</h4>
-<p class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed">Wayland does not allow intercepting Ctrl+V: point a shortcut of your desktop at <em>copy4paste --select</em>. On X11 Ctrl+V works by itself.</p>
+<h4 class="font-headline-sm text-headline-sm text-on-surface font-medium mb-1">X11 only, for now</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed">On Wayland the app stops and explains why: a compositor gives no way to read the clipboard in the background. Log in with an X11 session to use it.</p>
 </div>
 </div>
 </div>
@@ -575,7 +582,7 @@
 </div>
 <div class="flex justify-between items-center py-1">
 <dt class="text-on-surface-variant">Platforms</dt>
-<dd class="font-medium text-on-surface">macOS · Windows · Linux</dd>
+<dd class="font-medium text-on-surface">macOS stable · Windows and Linux beta (X11)</dd>
 </div>
 <div class="flex justify-between items-center py-1">
 <dt class="text-on-surface-variant">Dependencies</dt>

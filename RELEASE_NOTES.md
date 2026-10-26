@@ -3,6 +3,11 @@
 A free, open-source, native clipboard picker: copy several texts and press `⌘V` (macOS) or `Ctrl+V`
 (Windows and Linux) to choose which one to paste. Three platforms, one product, the same four skins.
 
+> **Windows and Linux in this release are beta.** They are published so they can be tried, not because
+> they are finished: macOS has been in use since 1.1, Windows and Linux have not been used by real
+> people yet. Known limits are in the README (the Linux build is X11 only; Wayland is not supported and
+> the app says so). Reports: https://github.com/KidiNoise/copy4paste/issues/6
+
 ## What is new in 1.3.0
 
 - **Windows 10 and 11**: a single `copy4paste.exe`, no installer, no admin rights, no runtime to
