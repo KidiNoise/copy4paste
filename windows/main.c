@@ -1104,8 +1104,16 @@ static LRESULT CALLBACK keyboard_proc(int code, WPARAM wparam, LPARAM lparam) {
         }
         if (!g_panel_visible && ctrl && !alt && !shift && info->vkCode == 'V') {
             poll_clipboard();
+            if (g_debug) {
+                fprintf(g_debug, "ctrl+v: entries=%d panel=%p\n", g_history.count, (void *)g_panel);
+                fflush(g_debug);
+            }
             if (g_history.count > 1) {
                 show_panel_at_pointer();
+                if (g_debug) {
+                    fprintf(g_debug, "after show: visible=%d\n", g_panel_visible);
+                    fflush(g_debug);
+                }
                 return 1;
             }
             return CallNextHookEx(g_hook, code, wparam, lparam);
@@ -1449,12 +1457,14 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE previous, PWSTR command_line, 
         Shell_NotifyIconW(NIM_MODIFY, &balloon);
     }
     if (g_status_path) write_status_file();
-    if (getenv("C4P_DEBUG")) {
-        g_debug = fopen("C:\\c4p-debug.log", "w");
-        if (g_debug) {
-            fprintf(g_debug, "hook=%p error=%lu\n", (void *)g_hook, (unsigned long)GetLastError());
-            fflush(g_debug);
-        }
+    {
+        const char *debug_path = getenv("C4P_DEBUG_FILE");
+        if (!debug_path && getenv("C4P_DEBUG")) debug_path = "C:\\c4p-debug.log";
+        if (debug_path) g_debug = fopen(debug_path, "w");
+    }
+    if (g_debug) {
+        fprintf(g_debug, "hook=%p error=%lu\n", (void *)g_hook, (unsigned long)GetLastError());
+        fflush(g_debug);
     }
 
     g_icon = LoadIconW(instance, MAKEINTRESOURCEW(1));

@@ -194,6 +194,8 @@ try {
     } else {
         Write-Host "6. the paste really lands in another application's window"
         $daemonStatus = Join-Path $work "daemon.log"
+        $hookLog = Join-Path $work "hook.log"
+        $env:C4P_DEBUG_FILE = $hookLog
         $daemon = Start-Process -FilePath $exe -ArgumentList @("--test-accept-injected", "--status-file", $daemonStatus) -PassThru
         Start-Sleep -Seconds 2
         Set-Clipboard -Value "first copy"
@@ -207,7 +209,8 @@ try {
         [C4P]::CtrlV()
         if (-not (Wait-Window "copy4paste" 5)) {
             $state = (Get-Content $daemonStatus -Raw) -replace "`r`n", "; "
-            Fail "Ctrl+V did not open the picker: *** $state"
+            $trace = if (Test-Path $hookLog) { ((Get-Content $hookLog -Raw) -replace "`r`n", " | ") } else { "<no hook log>" }
+            Fail "Ctrl+V did not open the picker: *** $state *** $trace"
         }
         [C4P]::Key(0x32)          # "2": the second copy, "first copy"
         Start-Sleep -Seconds 2
@@ -220,6 +223,7 @@ try {
         $clip = Get-Clipboard -Raw
         if ($clip -notmatch "first copy") { Fail "clipboard is '$clip'" }
         Stop-Process -Id $target.Id -Force -ErrorAction SilentlyContinue
+        Remove-Item Env:C4P_DEBUG_FILE -ErrorAction SilentlyContinue
         Stop-Process -Id $daemon.Id -Force -ErrorAction SilentlyContinue
         Stop-All
 
