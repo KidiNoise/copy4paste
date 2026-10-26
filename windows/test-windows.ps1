@@ -253,6 +253,23 @@ try {
         $entries = Wait-Entries $daemonStatus 2 10
         $state = if (Test-Path $daemonStatus) { (Get-Content $daemonStatus -Raw) -replace "`r`n", "; " } else { "<no status>" }
         if ($entries -lt 2) { Fail "the instance collected $entries copies: *** $state" }
+
+        # An independent application with an edit control, in its own process:
+        # the paste has to land there, not only on the clipboard.
+        Write-Host "   paste target: $targetExe"
+        $target = Start-Process -FilePath $targetExe -ArgumentList @($targetLog, "30") -PassThru
+        if (-not $target) { Fail "the paste target did not start" }
+        $waited = 0
+        while ($waited -lt 60 -and -not (Test-Path $targetLog)) {
+            Start-Sleep -Milliseconds 100
+            $waited++
+        }
+        if (-not (Test-Path $targetLog)) {
+            $why = if ($target.HasExited) { "it exited with code $($target.ExitCode)" } else { "it is still running" }
+            Fail "the paste target never created its log; $why"
+        }
+        Start-Sleep -Milliseconds 500
+
         Run @("--select") | Out-Null
         if (-not (Wait-Window "copy4paste" 5)) {
             $state = (Get-Content $daemonStatus -Raw) -replace "`r`n", "; "
