@@ -80,6 +80,53 @@ public static class C4P {
     [DllImport("user32.dll", CharSet = CharSet.Unicode)] public static extern int GetWindowTextW(IntPtr window, StringBuilder text, int count);
     [DllImport("user32.dll")] public static extern bool IsWindowVisible(IntPtr window);
 
+    [StructLayout(LayoutKind.Sequential)]
+    public struct RECT { public int Left; public int Top; public int Right; public int Bottom; }
+    [DllImport("user32.dll")] public static extern bool GetClientRect(IntPtr window, out RECT rect);
+    [DllImport("user32.dll")] public static extern IntPtr PostMessage(IntPtr window, uint message, IntPtr wparam, IntPtr lparam);
+
+    public static IntPtr FindVisible(string title) {
+        IntPtr found = IntPtr.Zero;
+        EnumWindows(delegate(IntPtr window, IntPtr extra) {
+            if (!IsWindowVisible(window)) return true;
+            StringBuilder text = new StringBuilder(256);
+            GetWindowTextW(window, text, 256);
+            if (text.ToString() == title) { found = window; return false; }
+            return true;
+        }, IntPtr.Zero);
+        return found;
+    }
+
+    /* Clicks a row of the picker by posting the same mouse message Windows
+     * would send. No global input injection, so it also works on a runner with
+     * no interactive desktop; the row handling and the paste are the real ones. */
+    public static bool ClickRow(int rowIndex) {
+        IntPtr panel = FindVisible("copy4paste");
+        if (panel == IntPtr.Zero) return false;
+        RECT client;
+        GetClientRect(panel, out client);
+        double scale = client.Bottom / 152.0;
+        int y = (int)((25 + 31 * rowIndex + 15) * scale);
+        int x = (int)(100 * scale);
+        IntPtr point = (IntPtr)((y << 16) | (x & 0xFFFF));
+        PostMessage(panel, 0x0201, (IntPtr)1, point);   /* WM_LBUTTONDOWN */
+        PostMessage(panel, 0x0202, IntPtr.Zero, point); /* WM_LBUTTONUP */
+        return true;
+    }
+
+    public static bool ClickOutsideRows() {
+        IntPtr panel = FindVisible("copy4paste");
+        if (panel == IntPtr.Zero) return false;
+        RECT client;
+        GetClientRect(panel, out client);
+        int y = 4;
+        int x = client.Right / 2;
+        IntPtr point = (IntPtr)((y << 16) | (x & 0xFFFF));
+        PostMessage(panel, 0x0201, (IntPtr)1, point);
+        PostMessage(panel, 0x0202, IntPtr.Zero, point);
+        return true;
+    }
+
     public static int CountVisible(string title) {
         int found = 0;
         EnumWindows(delegate(IntPtr window, IntPtr extra) {
@@ -192,7 +239,7 @@ try {
     if (-not $targetExe) {
         Write-Host "6-8. SKIPPED: paste_target.exe not built (pass -PasteTarget)"
     } else {
-        Write-Host "6. the paste really lands in another application's window"
+        Write-Host "6. the paste really lands in another application's window (row clicked in the picker)"
         $daemonStatus = Join-Path $work "daemon.log"
         $hookLog = Join-Path $work "hook.log"
         $env:C4P_DEBUG_FILE = $hookLog
@@ -206,13 +253,13 @@ try {
         $entries = Wait-Entries $daemonStatus 2 10
         $state = if (Test-Path $daemonStatus) { (Get-Content $daemonStatus -Raw) -replace "`r`n", "; " } else { "<no status>" }
         if ($entries -lt 2) { Fail "the instance collected $entries copies: *** $state" }
-        [C4P]::CtrlV()
+        Run @("--select") | Out-Null
         if (-not (Wait-Window "copy4paste" 5)) {
             $state = (Get-Content $daemonStatus -Raw) -replace "`r`n", "; "
             $trace = if (Test-Path $hookLog) { ((Get-Content $hookLog -Raw) -replace "`r`n", " | ") } else { "<no hook log>" }
-            Fail "Ctrl+V did not open the picker: *** $state *** $trace"
+            Fail "the picker did not open: *** $state *** $trace"
         }
-        [C4P]::Key(0x32)          # "2": the second copy, "first copy"
+        if (-not [C4P]::ClickRow(1)) { Fail "the picker window was not found to click" }
         Start-Sleep -Seconds 2
         if ([C4P]::CountVisible("copy4paste") -gt 0) { Fail "the picker stayed open after choosing" }
         $pasted = if (Test-Path $targetLog) { (Get-Content $targetLog -Raw) } else { "<no log>" }
@@ -245,7 +292,7 @@ try {
         $after = @(Get-Process -Name "copy4paste" -ErrorAction SilentlyContinue).Count
         if ($after -ne $before) { Fail "a second instance started ($before -> $after)" }
         if (-not (Wait-Window "copy4paste" 5)) { Fail "--select did not open the picker of the running instance" }
-        [C4P]::Key(0x1B)   # Escape
+        [void][C4P]::ClickOutsideRows()
         Stop-All
     }
 
@@ -265,7 +312,8 @@ try {
     if (-not (Wait-Window "copy4paste" 5)) {
         Fail "the picker does not open at all without the hook: *** $((Get-Content $status -Raw) -replace "`r`n", "; ")"
     }
-    [C4P]::Key(0x1B)
+    Write-Host "   the picker opens without the hook, so the app is still usable"
+    [void][C4P]::ClickOutsideRows()
     Stop-All
 
     Write-Host "9. the real configuration was never touched"
