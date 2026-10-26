@@ -44,9 +44,25 @@ Copy several pieces of text and pick which one to paste with a single key. Press
 Windows and Linux) and a small floating picker appears with your latest copies; hit `1`, `2`, `3`… and
 keep working. Native on all three platforms, no Electron, no network, no history on disk.
 
-> **Platforms:** macOS 10.15+ (Intel and Apple Silicon in one DMG), Windows 10 and 11 (single `.exe`,
-> no installer), and Linux x86_64 on top of GTK 3. Same app, same four skins, same JSON skin format
-> everywhere; the picker, the shortcuts and the settings behave the same on each.
+> **Platforms:** macOS 10.15+ (Intel and Apple Silicon in one DMG) — **stable**; Windows 10 and 11
+> (single `.exe`, no installer) and Linux x86_64 on top of GTK 3 — **beta**, see below. Same app, same
+> four skins, same JSON skin format everywhere; the picker, the shortcuts and the settings behave the
+> same on each.
+
+### Windows and Linux are beta
+
+They are published so they can be tried, not because they are finished. macOS has been in use since
+1.1; Windows and Linux have not been used by real people yet. What is known today:
+
+| | Status |
+|---|---|
+| Windows 10/11 | **Beta.** Automated tests cover the picker, the skins, the hook, a real paste into another application and the case where the hook cannot be installed. Not code-signed. |
+| Linux, X11 | **Beta.** Same coverage on X11 under a real X server, including a check for a `Ctrl+V` already owned by another application. |
+| Linux, Wayland | **Not supported.** Wayland gives an application no way to read the clipboard in the background and none to intercept keystrokes, so there is no history to show. The app stops at startup and says so. |
+
+Betas are expected to change. Reports go to the
+[issue tracker](https://github.com/KidiNoise/copy4paste/issues); the beta validation checklist lives in
+[#6](https://github.com/KidiNoise/copy4paste/issues/6).
 
 ## Community skins
 
@@ -149,9 +165,12 @@ To start it with Windows, put a shortcut to the `.exe` in `shell:startup` (press
 2. From the unpacked folder run `./install.sh`: it copies the binary to `~/.local/bin`, adds the menu
    entry and the icon, and needs no root.
 3. Run `copy4paste` (or pick it from the applications menu) and copy two different pieces of text.
-4. On X11, `Ctrl+V` opens the picker from any app. On **Wayland**, the compositor does not let an
-   application intercept `Ctrl+V`: bind a keyboard shortcut of your desktop to `copy4paste --select`.
-   That is a limitation of Wayland itself, not of the app.
+4. On **X11**, `Ctrl+V` opens the picker from any app. On **Wayland** the app does not run at all: a
+   compositor gives an application no way to read the clipboard in the background, so there would be
+   no history to pick from. It stops with a message saying so. Check with `echo $XDG_SESSION_TYPE`
+   and log in with an X11 session.
+5. One instance owns the history: `copy4paste --select` and `copy4paste --settings` reach it over a
+   socket in `$XDG_RUNTIME_DIR`, so a keyboard shortcut of your desktop opens the same picker.
 
 Requires GTK 3, libX11 and libXtst — present on every desktop distribution; nothing else is bundled.
 
@@ -206,6 +225,8 @@ with no code changes. See [NOTARIZATION.md](NOTARIZATION.md).
 - With a single copy, or when the clipboard holds files or images, the paste key behaves as usual.
 - No Dock icon, no window at launch, no history on disk. On Windows it lives in the notification area;
   on Linux it runs with a menu entry and no window.
+- `copy4paste --select`, `--settings` and `--status` (Linux) and the tray menu (Windows) act on the
+  running instance, never on a second, empty one.
 
 ## Privacy
 
@@ -220,9 +241,9 @@ handling passwords: some apps do not flag sensitive data on the clipboard proper
 |---|---|
 | `copy4paste-macOS-universal.dmg` | Installer. Intel 10.15+ and Apple Silicon 11+ in a single binary. |
 | `copy4paste-macOS-universal.zip` | The same app zipped, in case the DMG gives you trouble. |
-| `copy4paste-windows-x64.zip` | The Windows app: one `.exe`, no installer, no admin rights. |
-| `copy4paste-linux-x86_64.tar.gz` | Linux build with `install.sh`, menu entry and icon. |
-| `copy4paste_x86_64.deb` | The same Linux build as a Debian/Ubuntu package. |
+| `copy4paste-windows-x64.zip` | **Beta.** The Windows app: one `.exe`, no installer, no admin rights. |
+| `copy4paste-linux-x86_64.tar.gz` | **Beta.** Linux build with `install.sh`, menu entry and icon (X11). |
+| `copy4paste_x86_64.deb` | **Beta.** The same Linux build as a Debian/Ubuntu package (X11). |
 | `SHA256SUMS`, `SHA256SUMS-linux`, `SHA256SUMS-windows` | Checksums to verify the download arrived intact. |
 
 ## Build
@@ -252,8 +273,11 @@ cc -std=c11 -O2 -Wall -Wextra -Werror shared/*.c -o build/core-test.exe   # any 
 ```
 
 `.github/workflows/build-windows.yml` builds and tests on a real Windows runner: the low-level
-keyboard hook, `Ctrl+V`, the digit selection, the skins and the settings window. From Linux the same
-binary can be checked through Wine with `windows/test-windows.sh`.
+keyboard hook, `Ctrl+V`, the digit selection, the skins, the settings window, a **real paste into a
+separate test application** (`windows/tests/paste_target.c`, its own window and edit control) and the
+case where the keyboard hook cannot be installed. Every run uses a throwaway `%APPDATA%`, so a personal
+configuration is never touched. From Linux a subset can be checked through Wine with
+`windows/test-windows.sh`.
 
 **Linux** — needs `libgtk-3-dev`, `libxtst-dev`, `pkg-config` and a C compiler:
 
@@ -263,6 +287,9 @@ xvfb-run -a --server-args="-screen 0 1440x900x24" sh linux/test-linux.sh build/c
 ```
 
 `linux/build.sh` produces `build/copy4paste`; `linux/package.sh` makes the tarball and the `.deb`.
+Next to the end-to-end test there are `linux/test-ipc.sh` (one instance owns the history and
+`--select` reaches it), `linux/test-x11-conflict.sh` (another application already owns `Ctrl+V`) and
+`linux/test-wayland.sh` (a real headless Weston session, to prove the app refuses instead of breaking).
 The core tests (`shared/tests.c`) run on every platform: colours, skin parsing and its error messages,
 imports, the history rules and the preferences file.
 

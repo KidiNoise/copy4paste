@@ -25,9 +25,10 @@ copy4paste installed.
   Settings:            Ctrl+Alt+P      Quit: Settings > Quit
 
 On X11 sessions, Ctrl+V opens the picker from any app.
-On Wayland, the compositor does not let an app intercept Ctrl+V: bind a
-keyboard shortcut to `copy4paste --select` in your desktop settings
-(GNOME: Settings > Keyboard > Custom Shortcuts; KDE: System Settings > Shortcuts).
+This is a BETA build. A Wayland session is not supported: Wayland gives an
+application no way to read the clipboard in the background or to intercept
+Ctrl+V, so copy4paste refuses to start there and explains why. Log in with an
+X11 session (or Xorg) to use it.
 MESSAGE
 
 case ":$PATH:" in

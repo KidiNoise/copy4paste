@@ -1,5 +1,5 @@
-copy4paste for Windows
-======================
+copy4paste for Windows (BETA)
+=============================
 
 Choose which of your last copies to paste. Press Ctrl+V and a small picker
 appears next to the cursor: press 1-9 to paste that copy, use the arrow keys
@@ -16,6 +16,9 @@ clock): right-click the icon for "Open picker", "Settings" and "Quit". There is
 no window at launch, and no installer: the .exe is the whole app.
 
 Windows 10/11 64-bit. Nothing else to install.
+
+This build is labelled BETA: it is not code-signed and it has not been used by
+real users yet. Report anything that looks wrong in the project issue tracker.
 
 The first time, SmartScreen may say "Windows protected your PC" because the
 build is not code-signed. Click "More info" then "Run anyway". If you prefer,

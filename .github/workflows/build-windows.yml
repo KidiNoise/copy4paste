@@ -55,7 +55,7 @@ jobs:
 
       - name: Test on Windows (panel, skins, Ctrl+V, digit, settings)
         shell: pwsh
-        run: ./windows/test-windows.ps1 -Exe build/copy4paste.exe
+        run: ./windows/test-windows.ps1 -Exe build/copy4paste.exe -PasteTarget build/paste_target.exe
 
       - name: Package
         run: |

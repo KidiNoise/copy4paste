@@ -31,4 +31,10 @@ $CROSS -std=c11 -O2 -Wall -Wextra -Werror -Ishared -municode \
     -o "$OUT/copy4paste.exe" \
     -mwindows -lcomctl32 -lshell32 -lcomdlg32 -lgdi32 -luser32 -lole32
 
-echo "built $OUT/copy4paste.exe"
+# Test helper: an independent window that receives the paste, so the tests can
+# check the text actually arrives somewhere else (see windows/tests/).
+$CROSS -std=c11 -O2 -Wall -Wextra -Werror -municode \
+    windows/tests/paste_target.c -o "$OUT/paste_target.exe" \
+    -mwindows -luser32 -lgdi32 -lshell32
+
+echo "built $OUT/copy4paste.exe and $OUT/paste_target.exe"
