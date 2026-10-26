@@ -598,7 +598,7 @@ private final class Copy4PasteApp: NSObject, NSApplicationDelegate, NSTextFieldD
         let root = baseView(height: height)
         let theme = Config.skin
 
-        let title = NSTextField(labelWithString: "copy4paste · Settings · 1.2")
+        let title = NSTextField(labelWithString: "copy4paste · Settings · 1.3")
         title.font = NSFont.systemFont(ofSize: 12, weight: .semibold)
         title.textColor = theme.foreground.nsColor
         title.frame = NSRect(x: 14, y: 12, width: 262, height: 20)
@@ -789,7 +789,7 @@ private func eventTapCallback(_ proxy: CGEventTapProxy, _ type: CGEventType,
 }
 
 if CommandLine.arguments.contains("--version") {
-    print("copy4paste 1.2 · runtime")
+    print("copy4paste 1.3 · runtime")
 } else if CommandLine.arguments.contains("--verify-ui") {
     // Smoke test run ON A MAC by GitHub Actions before the app is distributed.
     _ = NSApplication.shared

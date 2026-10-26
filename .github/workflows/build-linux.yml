@@ -1,0 +1,80 @@
+name: build-linux
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    # Ubuntu 22.04 keeps the glibc floor low: the binary runs on any distro
+    # from 2022 onwards, which is what a desktop app should target.
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libgtk-3-dev libxtst-dev pkg-config xclip xdotool xvfb imagemagick
+
+      - name: Runner environment
+        run: |
+          set -euo pipefail
+          cc --version | head -1
+          pkg-config --modversion gtk+-3.0
+          uname -m
+          ldd --version | head -1
+
+      - name: Core tests (colours, skins, imports, history, preferences)
+        run: |
+          set -euo pipefail
+          cc -std=c11 -O2 -Wall -Wextra -Werror -D_GNU_SOURCE \
+            shared/json.c shared/skins.c shared/skins_list.c shared/history.c shared/config.c shared/tests.c \
+            -o "$RUNNER_TEMP/core-test"
+          "$RUNNER_TEMP/core-test"
+
+      - name: Build
+        run: |
+          set -euo pipefail
+          ./linux/build.sh build
+          ./build/copy4paste --version
+          ./build/copy4paste --version-json
+
+      - name: End-to-end test (real X server, real keys)
+        run: |
+          set -euo pipefail
+          xvfb-run -a --server-args="-screen 0 1440x900x24" sh linux/test-linux.sh build/copy4paste
+
+      - name: Screenshots of every skin
+        run: |
+          set -euo pipefail
+          xvfb-run -a --server-args="-screen 0 1440x900x24" sh linux/capturas.sh build/copy4paste capturas
+
+      - name: Package
+        run: |
+          set -euo pipefail
+          ./linux/package.sh build/copy4paste 1.3.0 dist
+          (cd dist && sha256sum copy4paste-linux-x86_64.tar.gz copy4paste_x86_64.deb > SHA256SUMS-linux && cat SHA256SUMS-linux)
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: copy4paste-linux
+          path: |
+            dist/copy4paste-linux-x86_64.tar.gz
+            dist/copy4paste_x86_64.deb
+            dist/SHA256SUMS-linux
+          if-no-files-found: error
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: copy4paste-linux-screenshots
+          path: capturas/*.png
+          if-no-files-found: error

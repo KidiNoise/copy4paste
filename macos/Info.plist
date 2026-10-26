@@ -9,8 +9,8 @@
     <key>CFBundleName</key><string>copy4paste</string>
     <key>CFBundleDisplayName</key><string>copy4paste</string>
     <key>CFBundlePackageType</key><string>APPL</string>
-    <key>CFBundleShortVersionString</key><string>1.2.0</string>
-    <key>CFBundleVersion</key><string>120</string>
+    <key>CFBundleShortVersionString</key><string>1.3.0</string>
+    <key>CFBundleVersion</key><string>130</string>
     <key>LSMinimumSystemVersion</key><string>10.15</string>
     <key>LSUIElement</key><true/>
     <key>NSHighResolutionCapable</key><true/>
