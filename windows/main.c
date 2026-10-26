@@ -85,7 +85,7 @@ static int g_verify;
 static int g_no_hook;              /* --no-hook: behave as if the hook failed */
 static int g_accept_injected;      /* --test-accept-injected: test-only seam */
 static DWORD g_own_input_until;    /* our own synthetic paste must never come back */
-static FILE *g_status;             /* --status-file: what the app could set up */
+static char *g_status_path;        /* --status-file: what the instance is doing */
 static int g_test_seconds = 15;
 
 static HFONT g_row_font;
@@ -970,6 +970,8 @@ static LRESULT CALLBACK settings_proc(HWND window, UINT message, WPARAM wparam, 
     return DefWindowProcW(window, message, wparam, lparam);
 }
 
+static void write_status_file(void);
+
 static void show_tray_menu(HWND window) {
     POINT cursor;
     GetCursorPos(&cursor);
@@ -992,7 +994,10 @@ static LRESULT CALLBACK message_proc(HWND window, UINT message, WPARAM wparam, L
             /* Safety net: WM_CLIPBOARDUPDATE is the primary signal, but some
              * clipboard owners (and Wine's X11 bridge) only change the
              * clipboard without notifying. 400 ms, like the macOS poll. */
-            if (wparam == 20) poll_clipboard();
+            if (wparam == 20) {
+                poll_clipboard();
+                write_status_file();
+            }
             return 0;
         case WM_C4P_OPEN_PICKER:
             poll_clipboard();
@@ -1222,6 +1227,23 @@ static void finish_verify(void) {
 
 /* --- startup ---------------------------------------------------------- */
 
+/* Rewritten every 400 ms while --status-file is in use, so a test can watch
+ * the instance instead of guessing with sleeps. */
+static void write_status_file(void) {
+    if (!g_status_path) return;
+    FILE *file = fopen(g_status_path, "w");
+    if (!file) return;
+    fprintf(file, "VERSION=%s\n", C4P_VERSION);
+    fprintf(file, "HOOK=%s\n", (g_hook && !g_no_hook) ? "installed" : "unavailable");
+    fprintf(file, "TRAY=%s\n", g_tray_added ? "installed" : "unavailable");
+    fprintf(file, "ENTRIES=%d\n", g_history.count);
+    fprintf(file, "PANEL_VISIBLE=%d\n", g_panel_visible ? 1 : 0);
+    fprintf(file, "CAPACITY=%d\n", g_config.capacity);
+    fprintf(file, "OPACITY=%d\n", g_config.opacity);
+    fprintf(file, "TOP=%s\n", g_history.count > 0 ? g_history.items[0] : "");
+    fclose(file);
+}
+
 static void keep_single_instance(void) {
     g_single_mutex = CreateMutexW(NULL, TRUE, L"Local\\copy4paste-single-instance");
     if (g_single_mutex && GetLastError() == ERROR_ALREADY_EXISTS) {
@@ -1289,9 +1311,8 @@ static int parse_arguments(int argc, wchar_t **argv) {
         else if (wcscmp(argv[i], L"--no-hook") == 0) g_no_hook = 1;
         else if (wcscmp(argv[i], L"--test-accept-injected") == 0) g_accept_injected = 1;
         else if (wcscmp(argv[i], L"--status-file") == 0 && i + 1 < argc) {
-            char *path = narrow(argv[++i]);
-            g_status = path ? fopen(path, "w") : NULL;
-            free(path);
+            free(g_status_path);
+            g_status_path = narrow(argv[++i]);
         }
         else if (wcscmp(argv[i], L"--verify") == 0) g_verify = 1;
         else if (wcscmp(argv[i], L"--skin") == 0 && i + 1 < argc) {
@@ -1419,12 +1440,7 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE previous, PWSTR command_line, 
                L"shortcut opened from there; everything else works.");
         Shell_NotifyIconW(NIM_MODIFY, &balloon);
     }
-    if (g_status) {
-        fprintf(g_status, "VERSION=%s\nHOOK=%s\n", C4P_VERSION,
-                (g_hook && !g_no_hook) ? "installed" : "unavailable");
-        fprintf(g_status, "TRAY=%s\n", g_tray_added ? "installed" : "unavailable");
-        fflush(g_status);
-    }
+    if (g_status_path) write_status_file();
     if (getenv("C4P_DEBUG")) {
         g_debug = fopen("C:\\c4p-debug.log", "w");
         if (g_debug) {

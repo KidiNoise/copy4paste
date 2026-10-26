@@ -183,13 +183,31 @@ try {
         Start-Sleep -Milliseconds 600
         Set-Clipboard -Value "second copy"
         Start-Sleep -Milliseconds 600
-        $daemon = Start-Process -FilePath $exe -ArgumentList @("--test-accept-injected") -PassThru
+        $daemonStatus = Join-Path $work "daemon.log"
+        $daemon = Start-Process -FilePath $exe -ArgumentList @("--test-accept-injected", "--status-file", $daemonStatus) -PassThru
         Start-Sleep -Seconds 2
         $target = Start-Process -FilePath $targetExe -ArgumentList @($targetLog, "25") -PassThru
         if (-not $target) { Fail "the paste target did not start" }
         Start-Sleep -Seconds 2
+        # Wait until the instance has actually collected both copies: the
+        # clipboard is polled, so a fixed sleep is not evidence.
+        $deadline = (Get-Date).AddSeconds(10)
+        $entries = 0
+        while ((Get-Date) -lt $deadline) {
+            if (Test-Path $daemonStatus) {
+                $text = Get-Content $daemonStatus -Raw
+                if ($text -match "ENTRIES=(\d+)") { $entries = [int]$Matches[1] }
+            }
+            if ($entries -ge 2) { break }
+            Start-Sleep -Milliseconds 150
+        }
+        $state = if (Test-Path $daemonStatus) { (Get-Content $daemonStatus -Raw) -replace "`r`n", "; " } else { "<no status>" }
+        if ($entries -lt 2) { Fail "the instance collected $entries copies: *** $state" }
         [C4P]::CtrlV()
-        if (-not (Wait-Window "copy4paste" 5)) { Fail "Ctrl+V did not open the picker" }
+        if (-not (Wait-Window "copy4paste" 5)) {
+            $state = (Get-Content $daemonStatus -Raw) -replace "`r`n", "; "
+            Fail "Ctrl+V did not open the picker: *** $state"
+        }
         [C4P]::Key(0x32)          # "2": the second copy, "first copy"
         Start-Sleep -Seconds 2
         if ([C4P]::CountVisible("copy4paste") -gt 0) { Fail "the picker stayed open after choosing" }
